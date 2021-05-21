@@ -10,6 +10,7 @@ namespace cfx{
         ~CFXWindow();
         CFXWindow &operator=(const CFXWindow &) = delete;
         bool shouldClose() {return glfwWindowShouldClose(window);}
+        void createWindowSurface(VkInstance instance,VkSurfaceKHR* surface_);
 
         private:
         void initWindow();
