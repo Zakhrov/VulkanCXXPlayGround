@@ -8,9 +8,12 @@ namespace cfx{
         public:
         CFXWindow(int w,int h, std::string name);
         ~CFXWindow();
+        CFXWindow(const CFXWindow &) = delete;
         CFXWindow &operator=(const CFXWindow &) = delete;
         bool shouldClose() {return glfwWindowShouldClose(window);}
         void createWindowSurface(VkInstance instance,VkSurfaceKHR* surface_);
+
+        VkExtent2D getExtent(){return {static_cast<uint32_t>(width),static_cast<uint32_t>(height)};}
 
         private:
         void initWindow();

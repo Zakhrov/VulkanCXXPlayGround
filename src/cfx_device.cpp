@@ -51,7 +51,6 @@ CFXDevice::CFXDevice(CFXWindow &window) : window{window} {
   createInstance();
   setupDebugMessenger();
   createSurface();
-  pickPhysicalDevice();
   createLogicalDevice();
   createCommandPool();
 }
@@ -75,11 +74,11 @@ void CFXDevice::createInstance() {
 
   VkApplicationInfo appInfo = {};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-  appInfo.pApplicationName = "LittleVulkanEngine App";
+  appInfo.pApplicationName = "VulkanProject App";
   appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.pEngineName = "No Engine";
   appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-  appInfo.apiVersion = VK_API_VERSION_1_0;
+  appInfo.apiVersion = VK_API_VERSION_1_2;
 
   VkInstanceCreateInfo createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -109,7 +108,12 @@ void CFXDevice::createInstance() {
 }
 
 void CFXDevice::pickPhysicalDevice() {
+}
+
+void CFXDevice::createLogicalDevice() {
+  
   uint32_t deviceCount = 0;
+  
   vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
   if (deviceCount == 0) {
     throw std::runtime_error("failed to find GPUs with Vulkan support!");
@@ -117,24 +121,26 @@ void CFXDevice::pickPhysicalDevice() {
   std::cout << "Device count: " << deviceCount << std::endl;
   std::vector<VkPhysicalDevice> devices(deviceCount);
   vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+   if(vkEnumeratePhysicalDeviceGroups(instance,&deviceGroupCount,nullptr) != VK_SUCCESS){
+      throw std::runtime_error("Failed to enumerate device group");
 
-  for (const auto &device : devices) {
-    if (isDeviceSuitable(device)) {
-      physicalDevice = device;
-      break;
+
     }
-  }
+    std::cout<< "DEVICE GROUPS " << deviceGroupCount << std::endl;
+  std::vector<VkPhysicalDeviceGroupProperties> physicalDeviceGroupProperties(deviceGroupCount);
+  // for (int i = 0; i < deviceGroupCount; ++i) {
+  //       physicalDeviceGroupProperties[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GROUP_PROPERTIES;
+  //       physicalDeviceGroupProperties[i].pNext = nullptr;
+  //       physicalDeviceGroupProperties[i].subsetAllocation = VK_FALSE;
+        
+  //   }
+    if(vkEnumeratePhysicalDeviceGroups(instance,&deviceGroupCount,physicalDeviceGroupProperties.data()) != VK_SUCCESS){
+      throw std::runtime_error("Failed to enumerate device group");
 
-  if (physicalDevice == VK_NULL_HANDLE) {
-    throw std::runtime_error("failed to find a suitable GPU!");
-  }
+    }
+    std::cout << "DEV GROUP PROPS SIZE "<< physicalDeviceGroupProperties.size() << std::endl;
 
-  vkGetPhysicalDeviceProperties(physicalDevice, &properties);
-  std::cout << "physical device: " << properties.deviceName << std::endl;
-}
-
-void CFXDevice::createLogicalDevice() {
-  QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+  QueueFamilyIndices indices = findQueueFamilies(physicalDeviceGroupProperties[0].physicalDevices[0]);
 
   std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
   std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
@@ -154,6 +160,25 @@ void CFXDevice::createLogicalDevice() {
 
   VkDeviceCreateInfo createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+  vkGetPhysicalDeviceProperties(physicalDeviceGroupProperties[0].physicalDevices[0], &properties);
+  std::cout << "physical device: " << properties.deviceName << std::endl;
+   VkDeviceGroupDeviceCreateInfo deviceGroupInfo{};
+    deviceGroupInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_DEVICE_CREATE_INFO;
+   for(int i=0;i<deviceGroupCount; i++){
+      if (physicalDeviceGroupProperties[i].physicalDeviceCount > 1) {
+        deviceGroupInfo.physicalDeviceCount = physicalDeviceGroupProperties[i].physicalDeviceCount;
+        deviceGroupInfo.pPhysicalDevices = physicalDeviceGroupProperties[i].physicalDevices;
+        createInfo.pNext = &deviceGroupInfo;
+        
+        std::cout << "physical device group : " << deviceGroupInfo.physicalDeviceCount << std::endl;
+    }
+    else{
+        std::cout<< "CANNOT MAKE CROSSFIRE :(" << std::endl;
+    }
+   }
+    
+
+
 
   createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
   createInfo.pQueueCreateInfos = queueCreateInfos.data();
@@ -170,10 +195,12 @@ void CFXDevice::createLogicalDevice() {
   } else {
     createInfo.enabledLayerCount = 0;
   }
+  
 
-  if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device_) != VK_SUCCESS) {
+  if (vkCreateDevice(physicalDeviceGroupProperties[0].physicalDevices[0], &createInfo, nullptr, &device_) != VK_SUCCESS) {
     throw std::runtime_error("failed to create logical device!");
   }
+  physicalDevice = physicalDeviceGroupProperties[0].physicalDevices[0];
 
   vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
   vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);

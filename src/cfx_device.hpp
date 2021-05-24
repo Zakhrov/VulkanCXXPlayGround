@@ -95,6 +95,7 @@ class CFXDevice {
   VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
   CFXWindow &window;
   VkCommandPool commandPool;
+  uint32_t deviceGroupCount = 0;
 
   VkDevice device_;
   VkSurfaceKHR surface_;
