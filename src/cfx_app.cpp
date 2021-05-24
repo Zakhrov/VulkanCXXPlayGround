@@ -5,6 +5,7 @@
 
 namespace cfx{
     App::App(){
+        loadModels();
         createPipelineLayout();
         createPipeline();
         createCommandBuffers();
@@ -19,6 +20,34 @@ namespace cfx{
         }
 
         vkDeviceWaitIdle(cfxDevice.device());
+    }
+    void App::sierpinski(
+    std::vector<CFXModel::Vertex> &vertices,
+    int depth,
+    glm::vec2 left,
+    glm::vec2 right,
+    glm::vec2 top) {
+  if (depth <= 0) {
+    vertices.push_back({top});
+    vertices.push_back({right});
+    vertices.push_back({left});
+  } else {
+    auto leftTop = 0.5f * (left + top);
+    auto rightTop = 0.5f * (right + top);
+    auto leftRight = 0.5f * (left + right);
+    sierpinski(vertices, depth - 1, left, leftRight, leftTop);
+    sierpinski(vertices, depth - 1, leftRight, right, rightTop);
+    sierpinski(vertices, depth - 1, leftTop, rightTop, top);
+  }
+}
+    void App::loadModels(){
+        std::vector<CFXModel::Vertex> vertices {
+            {{0.0f,-0.5f},{1.0f,0.0f,0.0f}},
+            {{0.5f,0.5f},{.0f,1.0f,0.0f}},
+            {{-0.5f,0.5f},{0.0f,0.0f,1.0f}},
+        };
+        // sierpinski(vertices, 5, {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.0f, -0.5f});
+        cfxModel = std::make_unique<CFXModel>(cfxDevice,vertices);
     }
     void App::createPipelineLayout(){
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -76,7 +105,8 @@ namespace cfx{
              vkCmdBeginRenderPass(commandBuffers[i],&renderPassInfo,VK_SUBPASS_CONTENTS_INLINE);
 
              cfxPipeLine->bind(commandBuffers[i]);
-             vkCmdDraw(commandBuffers[i],3,1,0,0);
+            cfxModel->bind(commandBuffers[i]);
+            cfxModel->draw(commandBuffers[i]);
 
              vkCmdEndRenderPass(commandBuffers[i]);
              if(vkEndCommandBuffer(commandBuffers[i])!=VK_SUCCESS){
