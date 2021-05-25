@@ -128,17 +128,29 @@ void CFXDevice::createLogicalDevice() {
     }
     std::cout<< "DEVICE GROUPS " << deviceGroupCount << std::endl;
   std::vector<VkPhysicalDeviceGroupProperties> physicalDeviceGroupProperties(deviceGroupCount);
-  // for (int i = 0; i < deviceGroupCount; ++i) {
-  //       physicalDeviceGroupProperties[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GROUP_PROPERTIES;
-  //       physicalDeviceGroupProperties[i].pNext = nullptr;
-  //       physicalDeviceGroupProperties[i].subsetAllocation = VK_FALSE;
-        
-  //   }
+  for (int i = 0; i < deviceGroupCount; i++) {
+      physicalDeviceGroupProperties[i] = VkPhysicalDeviceGroupProperties{};
+        std::cout << "DEV GROUP PROPS STYPE "<< physicalDeviceGroupProperties[i].sType << std::endl;
+    physicalDeviceGroupProperties[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GROUP_PROPERTIES;
+    std::cout << "DEV GROUP PROPS STYPE 2 "<< physicalDeviceGroupProperties[i].sType << std::endl;
+    }
     if(vkEnumeratePhysicalDeviceGroups(instance,&deviceGroupCount,physicalDeviceGroupProperties.data()) != VK_SUCCESS){
       throw std::runtime_error("Failed to enumerate device group");
 
     }
     std::cout << "DEV GROUP PROPS SIZE "<< physicalDeviceGroupProperties.size() << std::endl;
+    std::cout << "DEV GROUP PROPS  SUBSET ALLOCATION "<< physicalDeviceGroupProperties[0].subsetAllocation << std::endl;
+    std::vector<VkPhysicalDeviceProperties> physicalProperties(physicalDeviceGroupProperties[0].physicalDeviceCount);
+    std::vector<VkPhysicalDeviceFeatures> physicalFeatures(physicalDeviceGroupProperties[0].physicalDeviceCount);
+    for(int i=0; i< physicalDeviceGroupProperties[0].physicalDeviceCount; i++){
+      vkGetPhysicalDeviceProperties(physicalDeviceGroupProperties[0].physicalDevices[i], &physicalProperties[i]);
+      vkGetPhysicalDeviceFeatures(physicalDeviceGroupProperties[0].physicalDevices[i],&physicalFeatures[i]);
+      std::cout << physicalProperties[i].deviceName << std::endl;
+      std::cout << physicalFeatures[i].geometryShader << std::endl;
+      
+
+
+    }
 
   QueueFamilyIndices indices = findQueueFamilies(physicalDeviceGroupProperties[0].physicalDevices[0]);
 
@@ -161,6 +173,7 @@ void CFXDevice::createLogicalDevice() {
   VkDeviceCreateInfo createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   vkGetPhysicalDeviceProperties(physicalDeviceGroupProperties[0].physicalDevices[0], &properties);
+  
   std::cout << "physical device: " << properties.deviceName << std::endl;
    VkDeviceGroupDeviceCreateInfo deviceGroupInfo{};
     deviceGroupInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_DEVICE_CREATE_INFO;
@@ -195,15 +208,23 @@ void CFXDevice::createLogicalDevice() {
   } else {
     createInfo.enabledLayerCount = 0;
   }
-  
 
-  if (vkCreateDevice(physicalDeviceGroupProperties[0].physicalDevices[0], &createInfo, nullptr, &device_) != VK_SUCCESS) {
+  physicalDevice = physicalDeviceGroupProperties[0].physicalDevices[0];
+
+
+  if(isDeviceSuitable(physicalDevice)){
+    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device_) != VK_SUCCESS) {
     throw std::runtime_error("failed to create logical device!");
   }
-  physicalDevice = physicalDeviceGroupProperties[0].physicalDevices[0];
+  
 
   vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
   vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);
+
+  }
+  
+
+  
 }
 
 void CFXDevice::createCommandPool() {
@@ -558,4 +579,4 @@ void CFXDevice::createImageWithInfo(
   }
 }
 
-}  // namespace lve
+} 

@@ -26,6 +26,8 @@ namespace cfx{
         void createPipeline();
         void createCommandBuffers();
         void drawFrame();
+        void recreateSwapChain();
+        void recordCommandBuffer(int imageIndex);
         void sierpinski(
     std::vector<CFXModel::Vertex> &vertices,
     int depth,
@@ -35,7 +37,8 @@ namespace cfx{
 
         CFXWindow window{WIDTH,HEIGHT,"Hello Vulkan"};
         CFXDevice cfxDevice{window};
-        CFXSwapChain cfxSwapChain{cfxDevice,window.getExtent()};
+        // CFXSwapChain cfxSwapChain{cfxDevice,window.getExtent()};
+        std::unique_ptr<CFXSwapChain> cfxSwapChain;
         // CFXPipeLine cfxPipeLine{cfxDevice,CFXPipeLine::defaultPipelineConfigInfo(WIDTH,HEIGHT),"shaders/simple_shader.vert.spv","shaders/simple_shader.frag.spv"};
         std::unique_ptr<CFXPipeLine> cfxPipeLine;
         VkPipelineLayout pipelineLayout;
