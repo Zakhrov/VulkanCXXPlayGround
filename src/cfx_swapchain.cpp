@@ -122,9 +122,10 @@ VkResult CFXSwapChain::submitCommandBuffers(
 }
 
 void CFXSwapChain::createSwapChain() {
-  SwapChainSupportDetails swapChainSupport = device.getSwapChainSupport().front();
+  int i=0;
+   for(SwapChainSupportDetails swapChainSupport : device.getSwapChainSupport()){
 
-  VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
   VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
   VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
@@ -136,7 +137,7 @@ void CFXSwapChain::createSwapChain() {
 
   VkSwapchainCreateInfoKHR createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-  createInfo.surface = device.surface().front();
+  createInfo.surface = device.surface()[i];
 
   createInfo.minImageCount = imageCount;
   createInfo.imageFormat = surfaceFormat.format;
@@ -145,7 +146,7 @@ void CFXSwapChain::createSwapChain() {
   createInfo.imageArrayLayers = 1;
   createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-  QueueFamilyIndices indices = device.findPhysicalQueueFamilies().front();
+  QueueFamilyIndices indices = device.findPhysicalQueueFamilies()[i];
   uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
 
   if (indices.graphicsFamily != indices.presentFamily) {
@@ -173,7 +174,7 @@ void CFXSwapChain::createSwapChain() {
     throw std::runtime_error("Cannot find presentcapabilites");
   }
   std::cout << "DG PRESENT MODE " << deviceGroupPresentCapabilites.modes <<std::endl;
-   if(vkGetDeviceGroupSurfacePresentModesKHR(device.device(),device.surface().front(),&deviceGroupPresentCapabilites.modes)!= VK_SUCCESS){
+   if(vkGetDeviceGroupSurfacePresentModesKHR(device.device(),device.surface()[i],&deviceGroupPresentCapabilites.modes)!= VK_SUCCESS){
         throw std::runtime_error("failed to get device group surface present modes");
       }
 
@@ -197,6 +198,10 @@ void CFXSwapChain::createSwapChain() {
 
   swapChainImageFormat = surfaceFormat.format;
   swapChainExtent = extent;
+
+   }
+
+  
 }
 
 void CFXSwapChain::createImageViews() {

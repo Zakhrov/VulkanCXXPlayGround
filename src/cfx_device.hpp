@@ -81,7 +81,7 @@ class CFXDevice {
   void createInstance();
   void setupDebugMessenger();
   void createSurface();
-  void pickPhysicalDevice();
+  void createDeviceGroups();
   void createLogicalDevice();
   void createCommandPool();
 
@@ -100,9 +100,11 @@ class CFXDevice {
   CFXWindow &window;
   std::vector<VkCommandPool> commandPools;
   uint32_t deviceGroupCount = 0;
+  std::vector<VkPhysicalDeviceGroupProperties> physicalDeviceGroupProperties;
 
   VkDevice device_;
   std::vector<VkSurfaceKHR> surfaces;
+  
   std::vector<VkQueue> graphicsQueues;
   std::vector<VkQueue> presentQueues;
   std::vector<VkQueue> transferQueues;

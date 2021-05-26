@@ -50,9 +50,13 @@ void DestroyDebugUtilsMessengerEXT(
 CFXDevice::CFXDevice(CFXWindow &window) : window{window} {
   createInstance();
   setupDebugMessenger();
+  createDeviceGroups();
   createSurface();
   createLogicalDevice();
+  
   createCommandPool();
+  
+
 }
 
 CFXDevice::~CFXDevice() {
@@ -111,11 +115,7 @@ void CFXDevice::createInstance() {
   hasGflwRequiredInstanceExtensions();
 }
 
-void CFXDevice::pickPhysicalDevice() {
-}
-
-void CFXDevice::createLogicalDevice() {
-  
+void CFXDevice::createDeviceGroups() {
   uint32_t deviceCount = 0;
   
   vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -132,7 +132,7 @@ void CFXDevice::createLogicalDevice() {
 
     }
     std::cout<< "DEVICE GROUPS " << deviceGroupCount << std::endl;
-  std::vector<VkPhysicalDeviceGroupProperties> physicalDeviceGroupProperties(deviceGroupCount);
+    physicalDeviceGroupProperties.resize(deviceGroupCount);
 
     if(vkEnumeratePhysicalDeviceGroups(instance,&deviceGroupCount,physicalDeviceGroupProperties.data()) != VK_SUCCESS){
       throw std::runtime_error("Failed to enumerate device group");
@@ -159,6 +159,12 @@ void CFXDevice::createLogicalDevice() {
 
 
     }
+
+}
+
+void CFXDevice::createLogicalDevice() {
+  
+  
 
   std::vector<QueueFamilyIndices> indicesVector = findQueueFamilies(physicalDevices);
 
@@ -270,7 +276,17 @@ void CFXDevice::createCommandPool() {
   
 }
 
-void CFXDevice::createSurface() { window.createWindowSurface(instance, &surfaces[0]); }
+void CFXDevice::createSurface() {
+  std::cout << "Creating Surface" << std::endl;
+  for(VkPhysicalDevice device: physicalDevices){
+    VkSurfaceKHR surface_;
+    window.createWindowSurface(instance, &surface_);
+  surfaces.push_back(surface_);
+
+  }
+
+   
+ }
 
 
 void CFXDevice::populateDebugMessengerCreateInfo(
