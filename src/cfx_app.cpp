@@ -1,6 +1,7 @@
 #include "cfx_app.hpp"
 #include<stdexcept>
 #include<array>
+#include<iostream>
 
 
 namespace cfx{
@@ -14,9 +15,11 @@ namespace cfx{
         vkDestroyPipelineLayout(cfxDevice.device(),pipelineLayout,nullptr);
     }
     void App::run(){
+        int frame = 0;
         while(!window.shouldClose()){
-            drawFrame();
+            drawFrame(frame);
             glfwPollEvents();
+            frame ++;
         }
 
         vkDeviceWaitIdle(cfxDevice.device());
@@ -41,6 +44,7 @@ namespace cfx{
   }
 }
     void App::loadModels(){
+        std::cout << "LOAD MODELS" << std::endl;
         std::vector<CFXModel::Vertex> vertices {
             {{0.0f,-0.5f},{1.0f,0.0f,0.0f}},
             {{0.5f,0.5f},{.0f,1.0f,0.0f}},
@@ -85,7 +89,7 @@ namespace cfx{
          VkCommandBufferAllocateInfo allocInfo{};
          allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
          allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-         allocInfo.commandPool = cfxDevice.getCommandPool();
+         allocInfo.commandPool = cfxDevice.getCommandPool().front();
          allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
          if(vkAllocateCommandBuffers(cfxDevice.device(),&allocInfo,commandBuffers.data()) != VK_SUCCESS){
@@ -95,20 +99,48 @@ namespace cfx{
 
 
      }
-     void App::recordCommandBuffer(int imageIndex){
+     void App::recordCommandBuffer(int frame,int imageIndex){
+
+         uint32_t deviceMask;
+         if(frame %2 ==0){
+             deviceMask = 1;
+
+         }
+         else{
+             deviceMask =2;
+         }
+
+        
+        
+        
+        
+        VkDeviceGroupCommandBufferBeginInfoKHR deviceGroupCommandBufferInfo{};
+        deviceGroupCommandBufferInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO_KHR;
+        deviceGroupCommandBufferInfo.deviceMask = deviceMask;
+            
            VkCommandBufferBeginInfo beginInfo{};
              beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+             beginInfo.pNext = &deviceGroupCommandBufferInfo;
 
              if(vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS){
                  throw std::runtime_error("failed to begin command buffer");
              }
+             vkCmdSetDeviceMask(commandBuffers[imageIndex],deviceMask);
 
              VkRenderPassBeginInfo renderPassInfo{};
+             VkDeviceGroupRenderPassBeginInfoKHR deviceGroupRenderPassInfo{};
+             deviceGroupRenderPassInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_RENDER_PASS_BEGIN_INFO_KHR;
+             deviceGroupRenderPassInfo.deviceMask = deviceMask;
+             deviceGroupRenderPassInfo.deviceRenderAreaCount = cfxDevice.getDeviceRects().size();
+             deviceGroupRenderPassInfo.pDeviceRenderAreas = cfxDevice.getDeviceRects().data();
              renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
              renderPassInfo.renderPass = cfxSwapChain->getRenderPass();
              renderPassInfo.framebuffer = cfxSwapChain->getFrameBuffer(imageIndex);
-             renderPassInfo.renderArea.offset = {0,0};
-             renderPassInfo.renderArea.extent = cfxSwapChain->getSwapChainExtent();
+            //  renderPassInfo.renderArea.offset = {0,0};
+            //  renderPassInfo.renderArea.extent = cfxSwapChain->getSwapChainExtent();
+             renderPassInfo.pNext = &deviceGroupRenderPassInfo;
+             std::cout << "DEVICE RECTS " << cfxDevice.getDeviceRects().size() << std::endl;
+
 
              std::array<VkClearValue, 2> clearValues{};
              clearValues[0].color = {0.1f,0.1f,0.1f,1.0f};
@@ -117,6 +149,7 @@ namespace cfx{
              renderPassInfo.pClearValues = clearValues.data();
 
              vkCmdBeginRenderPass(commandBuffers[imageIndex],&renderPassInfo,VK_SUBPASS_CONTENTS_INLINE);
+             
 
              cfxPipeLine->bind(commandBuffers[imageIndex]);
             cfxModel->bind(commandBuffers[imageIndex]);
@@ -127,7 +160,7 @@ namespace cfx{
                  throw std::runtime_error("failed to record command buffer");
              }
      }
-        void App::drawFrame(){
+        void App::drawFrame(int frame){
             uint32_t imageIndex;
             auto result = cfxSwapChain->acquireNextImage(&imageIndex);
             if(result == VK_ERROR_OUT_OF_DATE_KHR){
@@ -138,7 +171,8 @@ namespace cfx{
             if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR){
                 throw std::runtime_error("failed to aquire swap chain image");
             }
-            recordCommandBuffer(imageIndex);
+
+            recordCommandBuffer(frame,imageIndex);
 
             result = cfxSwapChain->submitCommandBuffers(&commandBuffers[imageIndex],&imageIndex);
             if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.wasWindowResized()){

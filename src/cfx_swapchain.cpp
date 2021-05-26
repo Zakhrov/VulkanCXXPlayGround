@@ -93,13 +93,17 @@ VkResult CFXSwapChain::submitCommandBuffers(
   submitInfo.pSignalSemaphores = signalSemaphores;
 
   vkResetFences(device.device(), 1, &inFlightFences[currentFrame]);
-  if (vkQueueSubmit(device.graphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) !=
+  if (vkQueueSubmit(device.graphicsQueue().front(), 1, &submitInfo, inFlightFences[currentFrame]) !=
       VK_SUCCESS) {
     throw std::runtime_error("failed to submit draw command buffer!");
   }
 
   VkPresentInfoKHR presentInfo = {};
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+ 
+  
+
+
 
   presentInfo.waitSemaphoreCount = 1;
   presentInfo.pWaitSemaphores = signalSemaphores;
@@ -110,7 +114,7 @@ VkResult CFXSwapChain::submitCommandBuffers(
 
   presentInfo.pImageIndices = imageIndex;
 
-  auto result = vkQueuePresentKHR(device.presentQueue(), &presentInfo);
+  auto result = vkQueuePresentKHR(device.presentQueue().front(), &presentInfo);
 
   currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
@@ -118,7 +122,7 @@ VkResult CFXSwapChain::submitCommandBuffers(
 }
 
 void CFXSwapChain::createSwapChain() {
-  SwapChainSupportDetails swapChainSupport = device.getSwapChainSupport();
+  SwapChainSupportDetails swapChainSupport = device.getSwapChainSupport().front();
 
   VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
   VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -132,7 +136,7 @@ void CFXSwapChain::createSwapChain() {
 
   VkSwapchainCreateInfoKHR createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-  createInfo.surface = device.surface();
+  createInfo.surface = device.surface().front();
 
   createInfo.minImageCount = imageCount;
   createInfo.imageFormat = surfaceFormat.format;
@@ -141,7 +145,7 @@ void CFXSwapChain::createSwapChain() {
   createInfo.imageArrayLayers = 1;
   createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-  QueueFamilyIndices indices = device.findPhysicalQueueFamilies();
+  QueueFamilyIndices indices = device.findPhysicalQueueFamilies().front();
   uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
 
   if (indices.graphicsFamily != indices.presentFamily) {
@@ -161,6 +165,23 @@ void CFXSwapChain::createSwapChain() {
   createInfo.clipped = VK_TRUE;
 
   createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+   VkDeviceGroupSwapchainCreateInfoKHR deviceGroupSwapchainInfo = {};
+  VkDeviceGroupPresentCapabilitiesKHR deviceGroupPresentCapabilites{};
+  deviceGroupPresentCapabilites.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_PRESENT_CAPABILITIES_KHR;
+   if(vkGetDeviceGroupPresentCapabilitiesKHR(device.device(),&deviceGroupPresentCapabilites) != VK_SUCCESS){
+    throw std::runtime_error("Cannot find presentcapabilites");
+  }
+  std::cout << "DG PRESENT MODE " << deviceGroupPresentCapabilites.modes <<std::endl;
+   if(vkGetDeviceGroupSurfacePresentModesKHR(device.device(),device.surface().front(),&deviceGroupPresentCapabilites.modes)!= VK_SUCCESS){
+        throw std::runtime_error("failed to get device group surface present modes");
+      }
+
+  deviceGroupSwapchainInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_SWAPCHAIN_CREATE_INFO_KHR;
+  deviceGroupSwapchainInfo.modes = deviceGroupPresentCapabilites.modes;
+  
+  
+  createInfo.pNext = &deviceGroupSwapchainInfo;
 
   if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
     throw std::runtime_error("failed to create swap chain!");
@@ -309,6 +330,7 @@ void CFXSwapChain::createDepthResources() {
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     imageInfo.flags = 0;
+    
 
     device.createImageWithInfo(
         imageInfo,

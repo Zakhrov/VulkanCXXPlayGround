@@ -25,9 +25,9 @@ namespace cfx{
         void createPipelineLayout();
         void createPipeline();
         void createCommandBuffers();
-        void drawFrame();
+        void drawFrame(int frame);
         void recreateSwapChain();
-        void recordCommandBuffer(int imageIndex);
+        void recordCommandBuffer(int frame,int imageIndex);
         void sierpinski(
     std::vector<CFXModel::Vertex> &vertices,
     int depth,

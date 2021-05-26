@@ -1,6 +1,14 @@
 {
     "files.associations": {
         "__config": "cpp",
-        "__nullptr": "cpp"
+        "__nullptr": "cpp",
+        "stdexcept": "cpp",
+        "bitset": "cpp",
+        "functional": "cpp",
+        "fstream": "cpp",
+        "sstream": "cpp",
+        "tuple": "cpp",
+        "typeinfo": "cpp",
+        "string": "cpp"
     }
 }
