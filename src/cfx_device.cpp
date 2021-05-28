@@ -124,6 +124,7 @@ void CFXDevice::createDeviceGroups() {
   }
   std::cout << "Device count: " << deviceCount << std::endl;
   physicalDevices.resize(deviceCount);
+  deviceIds.resize(deviceCount);
   
   vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevices.data());
    if(vkEnumeratePhysicalDeviceGroups(instance,&deviceGroupCount,nullptr) != VK_SUCCESS){
@@ -151,6 +152,8 @@ void CFXDevice::createDeviceGroups() {
       
       vkGetPhysicalDeviceProperties(physicalDeviceGroupProperties[0].physicalDevices[i], &properties[i]);
       vkGetPhysicalDeviceFeatures(physicalDeviceGroupProperties[0].physicalDevices[i],&physicalFeatures[i]);
+      deviceIds[i] = properties[i].deviceID;
+
       std::cout << properties[i].deviceName << std::endl;
       std::cout << properties[i].apiVersion << std::endl;
       
@@ -169,8 +172,15 @@ void CFXDevice::createLogicalDevice() {
   std::vector<QueueFamilyIndices> indicesVector = findQueueFamilies(physicalDevices);
 
   std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-  for(QueueFamilyIndices indices: indicesVector){
-    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily,indices.transferFamily};
+  // for(QueueFamilyIndices indices: indicesVector){
+    
+
+  // }
+  QueueFamilyIndices indices = indicesVector[0];
+  std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
+     std::cout << "DC GRAPHICS INDEX " << indices.graphicsFamily << std::endl;
+  std::cout << "DC PRESENT INDEX " << indices.presentFamily << std::endl;
+  std::cout << "DC TRANSFER INDEX " << indices.transferFamily << std::endl;
 
   float queuePriority = 1.0f;
   for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -180,8 +190,6 @@ void CFXDevice::createLogicalDevice() {
     queueCreateInfo.queueCount = 1;
     queueCreateInfo.pQueuePriorities = &queuePriority;
     queueCreateInfos.push_back(queueCreateInfo);
-  }
-
   }
   
 
@@ -395,6 +403,7 @@ bool CFXDevice::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 
 std::vector<QueueFamilyIndices> CFXDevice::findQueueFamilies(std::vector<VkPhysicalDevice> devices) {
   std::vector<QueueFamilyIndices> indicesVector = {};
+  int j = 0;
   for(VkPhysicalDevice device: devices){
     QueueFamilyIndices indices;
 
@@ -425,7 +434,9 @@ std::vector<QueueFamilyIndices> CFXDevice::findQueueFamilies(std::vector<VkPhysi
     }
 
     i++;
+   
   }
+   j++;
   indicesVector.push_back(indices);
   }
   

@@ -10,7 +10,7 @@
 namespace cfx{
     class CFXSwapChain{
         public:
-  static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+  static constexpr int MAX_FRAMES_IN_FLIGHT = 4;
 
   CFXSwapChain(CFXDevice &deviceRef, VkExtent2D windowExtent);
   ~CFXSwapChain();
@@ -65,7 +65,7 @@ namespace cfx{
   CFXDevice &device;
   VkExtent2D windowExtent;
 
-  VkSwapchainKHR swapChain;
+  std::vector<VkSwapchainKHR> swapChains;
 
   std::vector<VkSemaphore> imageAvailableSemaphores;
   std::vector<VkSemaphore> renderFinishedSemaphores;

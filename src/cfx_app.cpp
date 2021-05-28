@@ -54,6 +54,7 @@ namespace cfx{
         cfxModel = std::make_unique<CFXModel>(cfxDevice,vertices);
     }
     void App::createPipelineLayout(){
+        std::cout << "CREATE PIPELINE LAYOUT"<< std::endl;
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 0;
@@ -66,6 +67,7 @@ namespace cfx{
         }
     }
     void App::createPipeline(){
+        std::cout << "CREATE PIPELINE"<< std::endl;
         auto pipelineConfig = CFXPipeLine::defaultPipelineConfigInfo(cfxSwapChain->width(),cfxSwapChain->height());
         pipelineConfig.renderPass = cfxSwapChain->getRenderPass();
         pipelineConfig.pipelineLayout = pipelineLayout;
@@ -74,6 +76,7 @@ namespace cfx{
         "shaders/simple_shader.frag.spv");
     }
     void App::recreateSwapChain(){
+        std::cout << "CREATE SWAPCHAIN"<< std::endl;
         auto extent = window.getExtent();
         while(extent.width == 0 || extent.height == 0){
             extent = window.getExtent();
