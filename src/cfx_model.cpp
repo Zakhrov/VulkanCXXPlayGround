@@ -2,6 +2,8 @@
 #include <cassert>
 #include <cstring>
 
+
+
 namespace cfx{
     CFXModel::CFXModel(CFXDevice& device,const std::vector<Vertex> &vertices ): cfxDevice{device}
     {

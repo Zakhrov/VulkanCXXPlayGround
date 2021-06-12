@@ -11,8 +11,8 @@
 namespace cfx{
     class App{
         public:
-        static constexpr int WIDTH = 800;
-        static constexpr int HEIGHT = 600;
+        static constexpr int WIDTH = 1600;
+        static constexpr int HEIGHT = 900;
         App();
         ~App();
         App(const App &) = delete;
@@ -27,7 +27,7 @@ namespace cfx{
         void createCommandBuffers();
         void drawFrame(int frame);
         void recreateSwapChain();
-        void recordCommandBuffer(int frame,int imageIndex);
+        void recordCommandBuffer(int frame,int imageIndex,uint32_t deviceIndex);
         void sierpinski(
     std::vector<CFXModel::Vertex> &vertices,
     int depth,

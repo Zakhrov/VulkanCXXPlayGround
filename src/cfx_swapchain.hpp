@@ -10,7 +10,7 @@
 namespace cfx{
     class CFXSwapChain{
         public:
-  static constexpr int MAX_FRAMES_IN_FLIGHT = 4;
+  static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
   CFXSwapChain(CFXDevice &deviceRef, VkExtent2D windowExtent);
   ~CFXSwapChain();
@@ -72,5 +72,6 @@ namespace cfx{
   std::vector<VkFence> inFlightFences;
   std::vector<VkFence> imagesInFlight;
   size_t currentFrame = 0;
+  std::vector<uint32_t> deviceMasks = {1,2};
     };
 }

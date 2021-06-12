@@ -46,8 +46,8 @@ class CFXDevice {
   std::vector<VkPhysicalDevice> getPhysicalDevices(){return physicalDevices;}
   std::vector<VkRect2D> getDeviceRects(){return deviceRects;}
   std::vector<VkSurfaceKHR> surface() { return surfaces; }
-  std::vector<VkQueue> graphicsQueue() { return graphicsQueues; }
-  std::vector<VkQueue> presentQueue() { return presentQueues; }
+  std::vector<VkQueue> getGraphicsQueues() { return {graphicsQueue}; }
+  std::vector<VkQueue> getPresentQueues() { return {presentQueue}; }
   VkInstance getInstance() {return instance;}
 
   std::vector<SwapChainSupportDetails> getSwapChainSupport() { return querySwapChainSupport(physicalDevices); }
@@ -64,7 +64,7 @@ class CFXDevice {
       VkBuffer &buffer,
       VkDeviceMemory &bufferMemory);
   std::vector<VkCommandBuffer> beginSingleTimeCommands();
-  void endSingleTimeCommands(std::vector<VkCommandBuffer> commandBuffers);
+  void endSingleTimeCommands(VkCommandBuffer commandBuffers);
   void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
   void copyBufferToImage(
       VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
@@ -108,11 +108,15 @@ class CFXDevice {
   std::vector<VkQueue> graphicsQueues;
   std::vector<VkQueue> presentQueues;
   std::vector<VkQueue> transferQueues;
+  VkQueue graphicsQueue;
+  VkQueue presentQueue;
+  VkQueue transferQueue;
   std::vector<VkRect2D> deviceRects;
   std::vector<uint32_t> deviceIds;
 
   const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
   const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+  std::vector<uint32_t> deviceMasks = {1,2};
 };
 
 }  // namespace lve

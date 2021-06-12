@@ -51,24 +51,40 @@ CFXSwapChain::~CFXSwapChain() {
 }
 
 VkResult CFXSwapChain::acquireNextImage(uint32_t *imageIndex) {
-  vkWaitForFences(
+//   vkWaitForFences(
+//       device.device(),
+//       1,
+//       &inFlightFences[currentFrame],
+//       VK_TRUE,
+//       std::numeric_limits<uint64_t>::max());
+      
+// VkResult result;
+//   //  for(int i=0; i<swapChains.size();i++){
+      
+//   //  }
+//   result = vkAcquireNextImageKHR(
+//       device.device(),
+//       swapChains[0],
+//       std::numeric_limits<uint64_t>::max(),
+//       imageAvailableSemaphores[currentFrame],  // must be a not signaled semaphore
+//       VK_NULL_HANDLE,
+//       imageIndex);
+//       if(result != VK_SUCCESS){
+//         throw std::runtime_error("failed to get next image!");
+//       }
+
+
+//   return result;
+ vkWaitForFences(
       device.device(),
       1,
       &inFlightFences[currentFrame],
       VK_TRUE,
       std::numeric_limits<uint64_t>::max());
-      int index;
-      if(currentFrame %2 == 0){
-        index = 0;
-
-      }
-      else{
-        index = 1;
-      }
 
   VkResult result = vkAcquireNextImageKHR(
       device.device(),
-      swapChains[index],
+      swapChains[0],
       std::numeric_limits<uint64_t>::max(),
       imageAvailableSemaphores[currentFrame],  // must be a not signaled semaphore
       VK_NULL_HANDLE,
@@ -77,13 +93,82 @@ VkResult CFXSwapChain::acquireNextImage(uint32_t *imageIndex) {
   return result;
 }
 
-VkResult CFXSwapChain::submitCommandBuffers(
-    const VkCommandBuffer *buffers, uint32_t *imageIndex) {
-      VkResult result;
+VkResult CFXSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex) {
+     
+  //     VkResult result;
+  //     std::vector<uint32_t> deviceMasks = {1,2};
+  //        if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
+  //   vkWaitForFences(device.device(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
+  // }
+  // imagesInFlight[*imageIndex] = inFlightFences[currentFrame];
+
+  // VkSubmitInfo submitInfo{};
+  // submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+  // VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
+  // VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+  // submitInfo.waitSemaphoreCount = 1;
+  // submitInfo.pWaitSemaphores = waitSemaphores;
+  // submitInfo.pWaitDstStageMask = waitStages;
+
+  // submitInfo.commandBufferCount = 1;
+  // submitInfo.pCommandBuffers = buffers;
+
+  // VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
+  // std::vector<uint32_t> waitSemaphoreDeviceIndices = {0};
+  // std::vector<uint32_t> signalSemaphoreDeviceIndices = {0};
+  // submitInfo.signalSemaphoreCount = 1;
+  // submitInfo.pSignalSemaphores = signalSemaphores;
+  // VkDeviceGroupSubmitInfo deviceGroupSubmitInfo{};
+  // deviceGroupSubmitInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_SUBMIT_INFO;
+  // deviceGroupSubmitInfo.commandBufferCount = 1;
+  // deviceGroupSubmitInfo.pCommandBufferDeviceMasks = deviceMasks.data();
+  // deviceGroupSubmitInfo.signalSemaphoreCount = 1;
+  // deviceGroupSubmitInfo.pSignalSemaphoreDeviceIndices = signalSemaphoreDeviceIndices.data();
+  // deviceGroupSubmitInfo.waitSemaphoreCount = 1;
+  // deviceGroupSubmitInfo.pWaitSemaphoreDeviceIndices = waitSemaphoreDeviceIndices.data();
+  // submitInfo.pNext = &deviceGroupSubmitInfo;
+
+  // vkResetFences(device.device(), 1, &inFlightFences[currentFrame]);
+  // if (vkQueueSubmit(device.graphicsQueue()[0], 1, &submitInfo, inFlightFences[currentFrame]) !=
+  //     VK_SUCCESS) {
+  //   throw std::runtime_error("failed to submit draw command buffer!");
+  // }
+
+  
+  
+  // VkDeviceGroupPresentInfoKHR deviceGroupPresentInfo{};
+  // deviceGroupPresentInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_PRESENT_INFO_KHR;
+  // deviceGroupPresentInfo.swapchainCount = 1;
+  // deviceGroupPresentInfo.pDeviceMasks = deviceMasks.data();
+  // deviceGroupPresentInfo.mode = VK_DEVICE_GROUP_PRESENT_MODE_LOCAL_BIT_KHR;
+  //   VkPresentInfoKHR presentInfo = {};
+  // presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
  
   
-  for(int i = 0; i < device.getPhysicalDevices().size(); i++){
-     if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
+
+
+
+  // presentInfo.waitSemaphoreCount = 1;
+  // presentInfo.pWaitSemaphores = signalSemaphores;
+
+  // presentInfo.swapchainCount = 1;
+  // presentInfo.pSwapchains = &swapChains[0];
+  // presentInfo.pNext = &deviceGroupPresentInfo;
+
+  // presentInfo.pImageIndices = imageIndex;
+
+
+  // result = vkQueuePresentKHR(device.presentQueue()[0], &presentInfo);
+  
+  
+ 
+
+  // currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+
+  // return result;
+
+  if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
     vkWaitForFences(device.device(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
   }
   imagesInFlight[*imageIndex] = inFlightFences[currentFrame];
@@ -105,44 +190,24 @@ VkResult CFXSwapChain::submitCommandBuffers(
   submitInfo.pSignalSemaphores = signalSemaphores;
 
   vkResetFences(device.device(), 1, &inFlightFences[currentFrame]);
-  if (vkQueueSubmit(device.graphicsQueue()[i], 1, &submitInfo, inFlightFences[currentFrame]) !=
+  if (vkQueueSubmit(device.getGraphicsQueues()[0], 1, &submitInfo, inFlightFences[currentFrame]) !=
       VK_SUCCESS) {
     throw std::runtime_error("failed to submit draw command buffer!");
   }
 
-  
-  std::vector<uint32_t> deviceMasks = {1,2};
-  VkDeviceGroupPresentInfoKHR deviceGroupPresentInfo{};
-  deviceGroupPresentInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_PRESENT_INFO_KHR;
-  deviceGroupPresentInfo.swapchainCount = 2;
-  deviceGroupPresentInfo.pDeviceMasks = deviceMasks.data();
-  deviceGroupPresentInfo.mode = VK_DEVICE_GROUP_PRESENT_MODE_LOCAL_BIT_KHR;
-    VkPresentInfoKHR presentInfo = {};
+  VkPresentInfoKHR presentInfo = {};
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
- 
-  
-
-
 
   presentInfo.waitSemaphoreCount = 1;
   presentInfo.pWaitSemaphores = signalSemaphores;
 
-  presentInfo.swapchainCount = swapChains.size();
-  presentInfo.pSwapchains = swapChains.data();
-  presentInfo.pNext = &deviceGroupPresentInfo;
+  VkSwapchainKHR swapChainsArray[] = {swapChains[0]};
+  presentInfo.swapchainCount = 1;
+  presentInfo.pSwapchains = swapChainsArray;
 
   presentInfo.pImageIndices = imageIndex;
 
-
-  auto eachResult = vkQueuePresentKHR(device.presentQueue()[i], &presentInfo);
-  if(eachResult == VK_SUCCESS){
-    result = eachResult;
-  }
-  else{
-     throw std::runtime_error("Failed to initialize present queue");
-  }
-  
-  }
+  auto result = vkQueuePresentKHR(device.getPresentQueues()[0], &presentInfo);
 
   currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
@@ -151,11 +216,98 @@ VkResult CFXSwapChain::submitCommandBuffers(
 
 void CFXSwapChain::createSwapChain() {
   swapChains = {};
-  int i=0;
-   for(SwapChainSupportDetails swapChainSupport : device.getSwapChainSupport()){
-     VkSwapchainKHR swapChain;
+  // int i=0;
+  //  for(SwapChainSupportDetails swapChainSupport : device.getSwapChainSupport()){
+  //    VkSwapchainKHR swapChain;
 
-     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+  //    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+  // VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+  // VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+
+  // uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+  // if (swapChainSupport.capabilities.maxImageCount > 0 &&
+  //     imageCount > swapChainSupport.capabilities.maxImageCount) {
+  //   imageCount = swapChainSupport.capabilities.maxImageCount;
+  // }
+
+
+  // VkSwapchainCreateInfoKHR createInfo = {};
+  // createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+  // createInfo.surface = device.surface()[i];
+
+  // createInfo.minImageCount = imageCount;
+  // createInfo.imageFormat = surfaceFormat.format;
+  // createInfo.imageColorSpace = surfaceFormat.colorSpace;
+  // createInfo.imageExtent = extent;
+  // createInfo.imageArrayLayers = 1;
+  // createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+  // QueueFamilyIndices indices = device.findPhysicalQueueFamilies()[i];
+  // uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
+  // std::cout << "GRAPHICS INDEX " << indices.graphicsFamily << std::endl;
+  // std::cout << "PRESENT INDEX " << indices.presentFamily << std::endl;
+  
+
+  // if (indices.graphicsFamily != indices.presentFamily && indices.graphicsFamily) {
+  //   createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+  //   createInfo.queueFamilyIndexCount = 2;
+  //   createInfo.pQueueFamilyIndices = queueFamilyIndices;
+  // } else {
+  //   createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  //   createInfo.queueFamilyIndexCount = 0;      // Optional
+  //   createInfo.pQueueFamilyIndices = nullptr;  // Optional
+  // }
+
+  // createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+  // createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+
+  // createInfo.presentMode = presentMode;
+  // createInfo.clipped = VK_TRUE;
+
+  // createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+  //  VkDeviceGroupSwapchainCreateInfoKHR deviceGroupSwapchainInfo = {};
+   
+  // VkDeviceGroupPresentCapabilitiesKHR deviceGroupPresentCapabilites{};
+  // deviceGroupPresentCapabilites.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_PRESENT_CAPABILITIES_KHR;
+  //  if(vkGetDeviceGroupPresentCapabilitiesKHR(device.device(),&deviceGroupPresentCapabilites) != VK_SUCCESS){
+  //   throw std::runtime_error("Cannot find presentcapabilites");
+  // }
+  // std::cout << "DG PRESENT MODE " << deviceGroupPresentCapabilites.modes <<std::endl;
+  //  if(vkGetDeviceGroupSurfacePresentModesKHR(device.device(),device.surface()[i],&deviceGroupPresentCapabilites.modes)!= VK_SUCCESS){
+  //       throw std::runtime_error("failed to get device group surface present modes");
+  //     }
+
+  // deviceGroupSwapchainInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_SWAPCHAIN_CREATE_INFO_KHR;
+  // deviceGroupSwapchainInfo.modes = VK_DEVICE_GROUP_PRESENT_MODE_LOCAL_BIT_KHR;
+  
+  
+  // createInfo.pNext = &deviceGroupSwapchainInfo;
+
+  // if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
+  //   throw std::runtime_error("failed to create swap chain!");
+  // }
+
+  // // we only specified a minimum number of images in the swap chain, so the implementation is
+  // // allowed to create a swap chain with more. That's why we'll first query the final number of
+  // // images with vkGetSwapchainImagesKHR, then resize the container and finally call it again to
+  // // retrieve the handles.
+  // vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, nullptr);
+  // swapChainImages.resize(imageCount);
+  // vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, swapChainImages.data());
+
+  // swapChainImageFormat = surfaceFormat.format;
+  // swapChainExtent = extent;
+  // swapChains.push_back(swapChain);
+
+  // i++;
+  
+
+  //  }
+     VkSwapchainKHR swapChain;
+   SwapChainSupportDetails swapChainSupport = device.getSwapChainSupport()[0];
+
+  VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
   VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
   VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
@@ -167,7 +319,7 @@ void CFXSwapChain::createSwapChain() {
 
   VkSwapchainCreateInfoKHR createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-  createInfo.surface = device.surface()[i];
+  createInfo.surface = device.surface()[0];
 
   createInfo.minImageCount = imageCount;
   createInfo.imageFormat = surfaceFormat.format;
@@ -176,13 +328,10 @@ void CFXSwapChain::createSwapChain() {
   createInfo.imageArrayLayers = 1;
   createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-  QueueFamilyIndices indices = device.findPhysicalQueueFamilies()[i];
+  QueueFamilyIndices indices = device.findPhysicalQueueFamilies()[0];
   uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
-  std::cout << "GRAPHICS INDEX " << indices.graphicsFamily << std::endl;
-  std::cout << "PRESENT INDEX " << indices.presentFamily << std::endl;
-  
 
-  if (indices.graphicsFamily != indices.presentFamily && indices.graphicsFamily) {
+  if (indices.graphicsFamily != indices.presentFamily) {
     createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
     createInfo.queueFamilyIndexCount = 2;
     createInfo.pQueueFamilyIndices = queueFamilyIndices;
@@ -200,23 +349,6 @@ void CFXSwapChain::createSwapChain() {
 
   createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-   VkDeviceGroupSwapchainCreateInfoKHR deviceGroupSwapchainInfo = {};
-  VkDeviceGroupPresentCapabilitiesKHR deviceGroupPresentCapabilites{};
-  deviceGroupPresentCapabilites.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_PRESENT_CAPABILITIES_KHR;
-   if(vkGetDeviceGroupPresentCapabilitiesKHR(device.device(),&deviceGroupPresentCapabilites) != VK_SUCCESS){
-    throw std::runtime_error("Cannot find presentcapabilites");
-  }
-  std::cout << "DG PRESENT MODE " << deviceGroupPresentCapabilites.modes <<std::endl;
-   if(vkGetDeviceGroupSurfacePresentModesKHR(device.device(),device.surface()[i],&deviceGroupPresentCapabilites.modes)!= VK_SUCCESS){
-        throw std::runtime_error("failed to get device group surface present modes");
-      }
-
-  deviceGroupSwapchainInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_SWAPCHAIN_CREATE_INFO_KHR;
-  deviceGroupSwapchainInfo.modes = deviceGroupPresentCapabilites.modes;
-  
-  
-  createInfo.pNext = &deviceGroupSwapchainInfo;
-
   if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
     throw std::runtime_error("failed to create swap chain!");
   }
@@ -233,16 +365,30 @@ void CFXSwapChain::createSwapChain() {
   swapChainExtent = extent;
   swapChains.push_back(swapChain);
 
-  i++;
-  
-
-   }
-
   
 }
 
 void CFXSwapChain::createImageViews() {
-  swapChainImageViews.resize(swapChainImages.size());
+  // swapChainImageViews.resize(swapChainImages.size());
+  // for (size_t i = 0; i < swapChainImages.size(); i++) {
+  //   VkImageViewCreateInfo viewInfo{};
+  //   viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  //   viewInfo.image = swapChainImages[i];
+  //   viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+  //   viewInfo.format = swapChainImageFormat;
+  //   viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  //   viewInfo.subresourceRange.baseMipLevel = 0;
+  //   viewInfo.subresourceRange.levelCount = 1;
+  //   viewInfo.subresourceRange.baseArrayLayer = 0;
+  //   viewInfo.subresourceRange.layerCount = 1;
+
+  //   if (vkCreateImageView(device.device(), &viewInfo, nullptr, &swapChainImageViews[i]) !=
+  //       VK_SUCCESS) {
+  //     throw std::runtime_error("failed to create texture image view!");
+  //   }
+  // }
+
+   swapChainImageViews.resize(swapChainImages.size());
   for (size_t i = 0; i < swapChainImages.size(); i++) {
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -309,7 +455,8 @@ void CFXSwapChain::createRenderPass() {
       VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
   std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
-  VkRenderPassCreateInfo renderPassInfo = {};
+  
+  VkRenderPassCreateInfo renderPassInfo{};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
   renderPassInfo.pAttachments = attachments.data();
