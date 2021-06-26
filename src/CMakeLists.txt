@@ -1,4 +1,4 @@
-set(SOURCES main.cpp cfx_window.cpp cfx_app.cpp cfx_pipeline.cpp cfx_device.cpp cfx_swapchain.cpp cfx_model.cpp)
+set(SOURCES main.cpp cfx_window.cpp cfx_app.cpp cfx_pipeline.cpp cfx_device.cpp cfx_swapchain.cpp cfx_model.cpp cfx_renderer.cpp cfx_render_system.cpp)
 
 set( ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
 

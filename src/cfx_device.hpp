@@ -48,7 +48,11 @@ class CFXDevice {
   std::vector<VkSurfaceKHR> surface() { return surfaces; }
   std::vector<VkQueue> getGraphicsQueues() { return {graphicsQueue}; }
   std::vector<VkQueue> getPresentQueues() { return {presentQueue}; }
+  int getDevicesinDeviceGroup(){return physicalDeviceGroupProperties[0].physicalDeviceCount; }
   VkInstance getInstance() {return instance;}
+  std::string getDeviceName(int deviceIndex){
+    return deviceNames[deviceIndex];
+  }
 
   std::vector<SwapChainSupportDetails> getSwapChainSupport() { return querySwapChainSupport(physicalDevices); }
   uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -113,10 +117,12 @@ class CFXDevice {
   VkQueue transferQueue;
   std::vector<VkRect2D> deviceRects;
   std::vector<uint32_t> deviceIds;
+  std::vector<std::string> deviceNames;
 
   const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
   const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
   std::vector<uint32_t> deviceMasks = {1,2};
+
 };
 
 }  // namespace lve

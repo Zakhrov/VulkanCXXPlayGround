@@ -5,6 +5,7 @@
 #include<vulkan/vulkan.h>
 #include<string>
 #include<vector>
+#include <memory>
 
 
 namespace cfx{
@@ -13,6 +14,7 @@ namespace cfx{
   static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
   CFXSwapChain(CFXDevice &deviceRef, VkExtent2D windowExtent);
+  CFXSwapChain(CFXDevice &deviceRef, VkExtent2D windowExtent,std::shared_ptr<CFXSwapChain> previous);
   ~CFXSwapChain();
 
   CFXSwapChain(const CFXSwapChain &) = delete;
@@ -33,10 +35,14 @@ namespace cfx{
   VkFormat findDepthFormat();
 
   VkResult acquireNextImage(uint32_t *imageIndex);
-  VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
+  VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex,uint32_t deviceIndex);
+  bool compareSwapFormats(const CFXSwapChain& cfxSwapChain) const {
+      return cfxSwapChain.swapChainDepthFormat == swapChainDepthFormat && cfxSwapChain.swapChainImageFormat == swapChainImageFormat;
+  }
 
  private:
   void createSwapChain();
+  void init();
   void createImageViews();
   void createDepthResources();
   void createRenderPass();
@@ -51,6 +57,7 @@ namespace cfx{
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 
   VkFormat swapChainImageFormat;
+  VkFormat swapChainDepthFormat;
   VkExtent2D swapChainExtent;
 
   std::vector<VkFramebuffer> swapChainFramebuffers;
@@ -65,7 +72,9 @@ namespace cfx{
   CFXDevice &device;
   VkExtent2D windowExtent;
 
-  std::vector<VkSwapchainKHR> swapChains;
+  VkSwapchainKHR swapChain;
+  std::shared_ptr<CFXSwapChain> oldSwapChain;
+
 
   std::vector<VkSemaphore> imageAvailableSemaphores;
   std::vector<VkSemaphore> renderFinishedSemaphores;

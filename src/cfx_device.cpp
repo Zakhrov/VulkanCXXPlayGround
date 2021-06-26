@@ -125,25 +125,29 @@ void CFXDevice::createDeviceGroups() {
   std::cout << "Device count: " << deviceCount << std::endl;
   physicalDevices.resize(deviceCount);
   deviceIds.resize(deviceCount);
+  deviceNames.resize(deviceCount);
   
   vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevices.data());
 
-   if(vkEnumeratePhysicalDeviceGroups(instance,&deviceGroupCount,nullptr) != VK_SUCCESS){
+
+
+   if(vkEnumeratePhysicalDeviceGroups(instance,&deviceGroupCount,VK_NULL_HANDLE) != VK_SUCCESS){
       throw std::runtime_error("Failed to enumerate device group");
 
 
     }
     std::cout<< "DEVICE GROUPS " << deviceGroupCount << std::endl;
     physicalDeviceGroupProperties.resize(deviceGroupCount);
-    //  for (int i = 0; i < deviceGroupCount; i++) {
+         for (int i = 0; i < deviceGroupCount; i++) {
       
 
 
-    //   //  physicalDeviceGroupProperties[i] = pdProperties;
+      //  physicalDeviceGroupProperties[i] = pdProperties;
      
-    //   physicalDeviceGroupProperties[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GROUP_PROPERTIES;
-    // std::cout << "DEV GROUP PROPS STYPE 2 "<< physicalDeviceGroupProperties[i].sType << std::endl;
-    // }
+      physicalDeviceGroupProperties[i].sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GROUP_PROPERTIES;
+    std::cout << "DEV GROUP PROPS STYPE 2 "<< physicalDeviceGroupProperties[i].sType << std::endl;
+    }
+    
     if(vkEnumeratePhysicalDeviceGroups(instance,&deviceGroupCount,physicalDeviceGroupProperties.data()) != VK_SUCCESS){
       throw std::runtime_error("Failed to enumerate device group");
 
@@ -167,6 +171,8 @@ void CFXDevice::createDeviceGroups() {
 
       std::cout << properties[i].deviceName << std::endl;
       std::cout << properties[i].apiVersion << std::endl;
+      deviceNames[i] = properties[i].deviceName;
+      
       
       
       
@@ -858,26 +864,26 @@ void CFXDevice::createImageWithInfo(
     throw std::runtime_error("failed to allocate image memory!");
   }
 
-  // if (vkBindImageMemory(device_, image, imageMemory, 0) != VK_SUCCESS) {
-  //   throw std::runtime_error("failed to bind image memory!");
-  // }
-  VkBindImageMemoryDeviceGroupInfo deviceGroupMemoryInfo{};
-  std::vector<uint32_t> deviceIndices = {1,2};
-  deviceGroupMemoryInfo.sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_DEVICE_GROUP_INFO;
-  deviceGroupMemoryInfo.deviceIndexCount = physicalDevices.size();
-  deviceGroupMemoryInfo.pDeviceIndices = deviceIndices.data();
-  deviceGroupMemoryInfo.pSplitInstanceBindRegions = deviceRects.data();
-  deviceGroupMemoryInfo.splitInstanceBindRegionCount = deviceRects.size();
-
-  VkBindImageMemoryInfo memoryInfo{};
-  memoryInfo.sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO;
-  memoryInfo.image = image;
-  memoryInfo.memory = imageMemory;
-  memoryInfo.memoryOffset = 0;
-  memoryInfo.pNext = &deviceGroupMemoryInfo;
-  if(vkBindImageMemory2(device_,1,&memoryInfo) != VK_SUCCESS){
-    throw std::runtime_error("failed to bind image memory 2!");
+  if (vkBindImageMemory(device_, image, imageMemory, 0) != VK_SUCCESS) {
+    throw std::runtime_error("failed to bind image memory!");
   }
+  // VkBindImageMemoryDeviceGroupInfo deviceGroupMemoryInfo{};
+  // std::vector<uint32_t> deviceIndices = {1,2};
+  // deviceGroupMemoryInfo.sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_DEVICE_GROUP_INFO;
+  // deviceGroupMemoryInfo.deviceIndexCount = physicalDevices.size();
+  // deviceGroupMemoryInfo.pDeviceIndices = deviceIndices.data();
+  // deviceGroupMemoryInfo.pSplitInstanceBindRegions = deviceRects.data();
+  // deviceGroupMemoryInfo.splitInstanceBindRegionCount = deviceRects.size();
+
+  // VkBindImageMemoryInfo memoryInfo{};
+  // memoryInfo.sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO;
+  // memoryInfo.image = image;
+  // memoryInfo.memory = imageMemory;
+  // memoryInfo.memoryOffset = 0;
+  // memoryInfo.pNext = &deviceGroupMemoryInfo;
+  // if(vkBindImageMemory2(device_,1,&memoryInfo) != VK_SUCCESS){
+  //   throw std::runtime_error("failed to bind image memory 2!");
+  // }
   
   
 }

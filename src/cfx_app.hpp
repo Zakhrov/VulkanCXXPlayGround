@@ -1,10 +1,10 @@
 #pragma once
 
 #include "cfx_window.hpp"
-#include "cfx_pipeline.hpp"
 #include "cfx_device.hpp"
-#include "cfx_swapchain.hpp"
+#include "cfx_renderer.hpp"
 #include "cfx_model.hpp"
+#include "cfx_game_object.hpp"
 #include<memory>
 #include<vector>
 #include <glm/glm.hpp>
@@ -21,29 +21,21 @@ namespace cfx{
 
 
         private:
-        void loadModels();
-        void createPipelineLayout();
-        void createPipeline();
-        void createCommandBuffers();
-        void drawFrame(int frame);
-        void recreateSwapChain();
-        void recordCommandBuffer(int frame,int imageIndex,uint32_t deviceIndex);
-        void sierpinski(
-    std::vector<CFXModel::Vertex> &vertices,
-    int depth,
-    glm::vec2 left,
-    glm::vec2 right,
-    glm::vec2 top);
+        void loadGameObjects();
+        
+        
+        
+        
+        
+        
+    
 
         CFXWindow window{WIDTH,HEIGHT,"Hello Vulkan"};
         CFXDevice cfxDevice{window};
         // CFXSwapChain cfxSwapChain{cfxDevice,window.getExtent()};
-        std::unique_ptr<CFXSwapChain> cfxSwapChain;
-        // CFXPipeLine cfxPipeLine{cfxDevice,CFXPipeLine::defaultPipelineConfigInfo(WIDTH,HEIGHT),"shaders/simple_shader.vert.spv","shaders/simple_shader.frag.spv"};
-        std::unique_ptr<CFXPipeLine> cfxPipeLine;
-        VkPipelineLayout pipelineLayout;
+        Renderer cfxRenderer{window,cfxDevice};
         std::vector<VkCommandBuffer> commandBuffers;
-        std::unique_ptr<CFXModel> cfxModel; 
+        std::vector<CFXGameObject> cfxGameObjects; 
         
     };
 }
