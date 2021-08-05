@@ -1,20 +1,24 @@
 #pragma once
 #include "cfx_model.hpp"
 #include <memory>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace cfx{
 
-    struct Transform2dComponent {
-        glm::vec2 translation{};
-        glm::vec2 scale{1.f,1.f};
-        float rotation;
-        glm::mat2 mat2() {
-            const float s = glm::sin(rotation);
-            const float c = glm::cos(rotation);
-            glm::mat2 rotationMatrix{{c,s},{-s,-c}};
-            glm::mat2 scaleMat{{scale.x,.0f},{.0f,scale.y}};
-            return rotationMatrix * scaleMat;
-            }
+    struct TransformComponent {
+        glm::vec3 translation{};
+        glm::vec3 scale{1.f,1.f,1.f};
+        glm::vec3 rotation{};
+        glm::mat4 mat4(){
+            auto transform = glm::translate(glm::mat4{1.f},translation);
+            transform = glm::rotate(transform,rotation.y,{0.f,1.f,0.f});
+            transform = glm::rotate(transform,rotation.x,{1.f,0.f,0.f});
+            transform = glm::rotate(transform,rotation.z,{0.f,0.f,1.f});
+            transform = glm:: scale(transform,scale);
+            return transform;
+
+
+        }
     };
 
 
@@ -34,7 +38,7 @@ namespace cfx{
         id_t getId() { return id;}
         std::shared_ptr<CFXModel> model{};
         glm::vec3 color{};
-        Transform2dComponent transform2d;
+        TransformComponent transformComponent{};
 
         private:
         id_t id;

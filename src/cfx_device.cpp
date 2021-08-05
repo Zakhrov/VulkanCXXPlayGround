@@ -63,6 +63,7 @@ CFXDevice::~CFXDevice() {
   for(VkCommandPool commandPool: commandPools){
     vkDestroyCommandPool(device_, commandPool, nullptr);
   }
+  
   vkDestroyDevice(device_, nullptr);
 
   if (enableValidationLayers) {
@@ -126,6 +127,8 @@ void CFXDevice::createDeviceGroups() {
   physicalDevices.resize(deviceCount);
   deviceIds.resize(deviceCount);
   deviceNames.resize(deviceCount);
+  deviceMasks.resize(deviceCount);
+  deviceIndices.resize(deviceCount);
   
   vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevices.data());
 
@@ -168,6 +171,8 @@ void CFXDevice::createDeviceGroups() {
       vkGetPhysicalDeviceFeatures(physicalDeviceGroupProperties[0].physicalDevices[i],&physicalFeatures[i]);
       vkGetPhysicalDeviceFeatures2(physicalDeviceGroupProperties[0].physicalDevices[i],&physicalFeatures2[i]);
       deviceIds[i] = properties[i].deviceID;
+      deviceMasks[i] = i+1;
+      deviceIndices[i] = i;
 
       std::cout << properties[i].deviceName << std::endl;
       std::cout << properties[i].apiVersion << std::endl;
@@ -185,97 +190,6 @@ void CFXDevice::createDeviceGroups() {
 void CFXDevice::createLogicalDevice() {
   
   
-
-  // std::vector<QueueFamilyIndices> indicesVector = findQueueFamilies(physicalDevices);
-
-  // std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-  // // for(QueueFamilyIndices indices: indicesVector){
-    
-
-  // // }
-  // QueueFamilyIndices indices = indicesVector[0];
-  // std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
-  //    std::cout << "DC GRAPHICS INDEX " << indices.graphicsFamily << std::endl;
-  // std::cout << "DC PRESENT INDEX " << indices.presentFamily << std::endl;
-  // std::cout << "DC TRANSFER INDEX " << indices.transferFamily << std::endl;
-
-  // float queuePriority = 1.0f;
-  // for (uint32_t queueFamily : uniqueQueueFamilies) {
-  //   VkDeviceQueueCreateInfo queueCreateInfo = {};
-  //   queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-  //   queueCreateInfo.queueFamilyIndex = queueFamily;
-  //   queueCreateInfo.queueCount = 1;
-  //   queueCreateInfo.pQueuePriorities = &queuePriority;
-  //   queueCreateInfos.push_back(queueCreateInfo);
-  // }
-  
-
-  // VkPhysicalDeviceFeatures deviceFeatures = {};
-  // deviceFeatures.samplerAnisotropy = VK_TRUE;
-
-  // VkDeviceCreateInfo createInfo = {};
-  // createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  //  VkDeviceGroupDeviceCreateInfo deviceGroupInfo{};
-  //   deviceGroupInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_DEVICE_CREATE_INFO;
-  //  for(int i=0;i<deviceGroupCount; i++){
-  //     if (physicalDeviceGroupProperties[i].physicalDeviceCount > 1) {
-  //       deviceGroupInfo.physicalDeviceCount = physicalDeviceGroupProperties[i].physicalDeviceCount;
-  //       deviceGroupInfo.pPhysicalDevices = physicalDeviceGroupProperties[i].physicalDevices;
-  //       VkDeviceMemoryOverallocationCreateInfoAMD memoryAllocationInfoAMD{};
-  //       memoryAllocationInfoAMD.sType = VK_STRUCTURE_TYPE_DEVICE_MEMORY_OVERALLOCATION_CREATE_INFO_AMD;
-  //       memoryAllocationInfoAMD.overallocationBehavior = VK_MEMORY_OVERALLOCATION_BEHAVIOR_ALLOWED_AMD;
-  //       deviceGroupInfo.pNext = &memoryAllocationInfoAMD;
-  //       // createInfo.pNext = &deviceGroupInfo;
-        
-        
-  //       std::cout << "physical device group : " << deviceGroupInfo.physicalDeviceCount << std::endl;
-  //   }
-  //   else{
-  //       std::cout<< "CANNOT MAKE CROSSFIRE :(" << std::endl;
-  //   }
-  //  }
-    
-
-
-
-  // createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-  // createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
-  // createInfo.pEnabledFeatures = &deviceFeatures;
-  // createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-  // createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
-  // // might not really be necessary anymore because device specific validation layers
-  // // have been deprecated
-  // if (enableValidationLayers) {
-  //   createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-  //   createInfo.ppEnabledLayerNames = validationLayers.data();
-  // } else {
-  //   createInfo.enabledLayerCount = 0;
-  // }
-
-  
-
-
-  // if (vkCreateDevice(physicalDevices[0], &createInfo, nullptr, &device_) != VK_SUCCESS) {
-  //   throw std::runtime_error("failed to create logical device!");
-  // }
- 
-
-  
-  // for(QueueFamilyIndices indices: indicesVector){
-  //   VkQueue graphicsQueue_;
-  //   VkQueue presentQueue_;
-  //   VkQueue transferQueue_;
-  //   vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
-  //   vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);
-  //   vkGetDeviceQueue(device_, indices.transferFamily, 0, &transferQueue_);
-  //   graphicsQueues.push_back(graphicsQueue_);
-  //   presentQueues.push_back(presentQueue_);
-  //   transferQueues.push_back(transferQueue_);
-
-  // }
-  // std::cout << "PRESENT QUEUE SIZE   " << presentQueues.size() << std::endl;
 
    QueueFamilyIndices indices = findQueueFamilies(physicalDevices)[0];
 
@@ -337,6 +251,7 @@ void CFXDevice::createLogicalDevice() {
   if (vkCreateDevice(physicalDevices[0], &createInfo, nullptr, &device_) != VK_SUCCESS) {
     throw std::runtime_error("failed to create logical device!");
   }
+  
 
   vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue);
   vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue);
@@ -347,23 +262,7 @@ void CFXDevice::createLogicalDevice() {
 }
 
 void CFXDevice::createCommandPool() {
-  // std::vector<QueueFamilyIndices> indicesVector = findPhysicalQueueFamilies();
-  // for(QueueFamilyIndices queueFamilyIndices: indicesVector){
-  //   VkCommandPool commandPool;
-    
-  //   VkCommandPoolCreateInfo poolInfo = {};
-  // poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  // poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
-  // poolInfo.flags =
-  //     VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-
-  // if (vkCreateCommandPool(device_, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
-  //   throw std::runtime_error("failed to create command pool!");
-  // }
-  // commandPools.push_back(commandPool);
-
-  // }
-
+  
    QueueFamilyIndices queueFamilyIndices = findPhysicalQueueFamilies()[0];
   VkCommandPool commandPool;
   VkCommandPoolCreateInfo poolInfo = {};
@@ -501,46 +400,7 @@ bool CFXDevice::checkDeviceExtensionSupport(VkPhysicalDevice device) {
 }
 
 std::vector<QueueFamilyIndices> CFXDevice::findQueueFamilies(std::vector<VkPhysicalDevice> devices) {
-  // std::vector<QueueFamilyIndices> indicesVector = {};
-  // int j = 0;
-  // for(VkPhysicalDevice device: devices){
-  //   QueueFamilyIndices indices;
-
-  // uint32_t queueFamilyCount = 0;
-  // vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-
-  // std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-  // vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-  // int i = 0;
-  // for (const auto &queueFamily : queueFamilies) {
-  //   if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-  //     indices.graphicsFamily = i;
-  //     indices.graphicsFamilyHasValue = true;
-  //   }
-  //   else if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) {
-  //     indices.transferFamily = i;
-  //     indices.transferFamilyHasValue = true;
-  //   }
-  //   VkBool32 presentSupport = false;
-  //   vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surfaces[i], &presentSupport);
-  //   if (queueFamily.queueCount > 0 && presentSupport) {
-  //     indices.presentFamily = i;
-  //     indices.presentFamilyHasValue = true;
-  //   }
-  //   if (indices.isComplete()) {
-  //     break;
-  //   }
-
-  //   i++;
-   
-  // }
-  //  j++;
-  // indicesVector.push_back(indices);
-  // }
   
-
-  // return indicesVector;
   QueueFamilyIndices indices;
 
   uint32_t queueFamilyCount = 0;
@@ -573,64 +433,7 @@ std::vector<QueueFamilyIndices> CFXDevice::findQueueFamilies(std::vector<VkPhysi
 }
 
 std::vector<SwapChainSupportDetails> CFXDevice::querySwapChainSupport(std::vector<VkPhysicalDevice> devices) {
-  // std::vector<SwapChainSupportDetails> detailsVector = {};
-  // deviceRects = {};  
-  // int i=0;
-  // for(VkPhysicalDevice device: devices){
-  //   std::cout<< "QUERY SWAP CHAIN" << std::endl;
-  //   SwapChainSupportDetails details;
-
-  // vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surfaces[i], &details.capabilities);
-
-  // uint32_t formatCount;
-  // vkGetPhysicalDeviceSurfaceFormatsKHR(device, surfaces[i], &formatCount, nullptr);
-
-  // if (formatCount != 0) {
-  //   details.formats.resize(formatCount);
-  //   vkGetPhysicalDeviceSurfaceFormatsKHR(device, surfaces[i], &formatCount, details.formats.data());
-  // }
-
-  // uint32_t presentModeCount;
-  // vkGetPhysicalDeviceSurfacePresentModesKHR(device, surfaces[i], &presentModeCount, nullptr);
-
-  // if (presentModeCount != 0) {
-    
-  //   details.presentModes.resize(presentModeCount);
-     
-  // // if(vkGetDeviceGroupPresentCapabilitiesKHR(device_,nullptr) != VK_SUCCESS){
-  // //   throw std::runtime_error("Cannot find presentcapabilites");
-  // // }
- 
-
   
-  //     uint32_t rectangleCount = 0;
-  //     if(vkGetPhysicalDevicePresentRectanglesKHR(device,surfaces[i],&rectangleCount,nullptr)!= VK_SUCCESS){
-  //           throw std::runtime_error("failed to get present rectangles");
-  //       }
-  //       std::vector<VkRect2D> rectangles(rectangleCount);
-  //     if(vkGetPhysicalDevicePresentRectanglesKHR(device,surfaces[i],&rectangleCount,rectangles.data())!= VK_SUCCESS){
-  //           throw std::runtime_error("failed to get present rectangles");
-  //       }
-  //       for(VkRect2D rect: rectangles){
-  //         deviceRects.push_back(rect);
-
-  //       }
-        
-
-  // }
-  
-     
-  //   vkGetPhysicalDeviceSurfacePresentModesKHR(
-  //       device,
-  //       surfaces[i],
-  //       &presentModeCount,
-  //       details.presentModes.data());
-
-  
-  // detailsVector.push_back(details);
-  // i++;
-  // }
-  // return detailsVector;
     SwapChainSupportDetails details;
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(devices[0], surfaces[0], &details.capabilities);
 
@@ -673,12 +476,17 @@ VkFormat CFXDevice::findSupportedFormat(
   throw std::runtime_error("failed to find supported format!");
 }
 
-uint32_t CFXDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+uint32_t CFXDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties,int deviceIndex) {
   VkPhysicalDeviceMemoryProperties memProperties;
-  vkGetPhysicalDeviceMemoryProperties(physicalDevices[0], &memProperties);
+  vkGetPhysicalDeviceMemoryProperties(physicalDevices[deviceIndex], &memProperties);
+  
   for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
     if ((typeFilter & (1 << i)) &&
         (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+          VkPeerMemoryFeatureFlags memoryFlags{};
+          vkGetDeviceGroupPeerMemoryFeatures(device_,i, deviceIndex !=0 ? deviceIndices[deviceIndex -1]:deviceIndices[deviceIndex],deviceIndex ==0 ? deviceIndices[deviceIndex+1] : deviceIndices[deviceIndex],&memoryFlags);
+          memProperties.memoryHeaps[i].flags = memoryFlags;
+          
       return i;
     }
   }
@@ -692,7 +500,15 @@ void CFXDevice::createBuffer(
     VkMemoryPropertyFlags properties,
     VkBuffer &buffer,
     VkDeviceMemory &bufferMemory) {
-  VkBufferCreateInfo bufferInfo{};
+
+      
+  int deviceIndex = 0;
+  int bindInfoCount = deviceMasks.size();
+  std::vector<VkBindBufferMemoryInfo> bufferMemoryInfos;
+  bufferMemoryInfos.resize(bindInfoCount);
+  for(int i =0; i < deviceMasks.size();i++){
+
+    VkBufferCreateInfo bufferInfo{};
   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferInfo.size = size;
   bufferInfo.usage = usage;
@@ -702,49 +518,51 @@ void CFXDevice::createBuffer(
     throw std::runtime_error("failed to create vertex buffer!");
   }
 
-  VkMemoryRequirements memRequirements;
+  VkMemoryRequirements memRequirements{};
   vkGetBufferMemoryRequirements(device_, buffer, &memRequirements);
+  
+  
+  
+  VkMemoryAllocateFlagsInfo allocFlagsInfo{};
+  allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+  allocFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_MASK_BIT;
+  allocFlagsInfo.deviceMask = deviceMasks[i];
 
-  VkMemoryAllocateInfo allocInfo{};
+    VkMemoryAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memRequirements.size;
-  allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+  allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties,i);
+  allocInfo.pNext = &allocFlagsInfo;
 
   if (vkAllocateMemory(device_, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
     throw std::runtime_error("failed to allocate vertex buffer memory!");
   }
 
-  vkBindBufferMemory(device_, buffer, bufferMemory, 0);
+  // vkBindBufferMemory(device_, buffer, bufferMemory, 0);
+  VkBindBufferMemoryDeviceGroupInfo bindBufferMemoryDeviceGroupInfo{};
+  bindBufferMemoryDeviceGroupInfo.sType = VK_STRUCTURE_TYPE_BIND_BUFFER_MEMORY_DEVICE_GROUP_INFO;
+  bindBufferMemoryDeviceGroupInfo.deviceIndexCount = deviceIndices.size();
+  bindBufferMemoryDeviceGroupInfo.pDeviceIndices = deviceIndices.data();
+  VkBindBufferMemoryInfo memoryInfo{};
+  memoryInfo.sType = VK_STRUCTURE_TYPE_BIND_BUFFER_MEMORY_INFO;
+  memoryInfo.buffer = buffer;
+  memoryInfo.memory = bufferMemory;
+  memoryInfo.memoryOffset = 0;
+  memoryInfo.pNext = &bindBufferMemoryDeviceGroupInfo;
+  bufferMemoryInfos[i] = memoryInfo;    
+  }
+  if(vkBindBufferMemory2(device_,bindInfoCount,bufferMemoryInfos.data())!=VK_SUCCESS){
+    throw std::runtime_error("failed to bind Buffer memory 2 !");
+  }else{
+    std::cout << "Bind Buffer MEMORY 2 succeeded" <<std::endl;
+  }
+  
+      
+  
 }
 
 std::vector<VkCommandBuffer> CFXDevice::beginSingleTimeCommands() {
-  // std::vector<VkCommandBuffer> commandBuffers = {};
-  // // for(int i=0; i<commandPools.size();i++){
-
-
-  // // }
-
-  //   VkCommandBufferAllocateInfo allocInfo{};
-  // allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  // allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  // allocInfo.commandPool = commandPools[0];
-  // allocInfo.commandBufferCount = 1;
-
-  // VkCommandBuffer commandBuffer;
-  // vkAllocateCommandBuffers(device_, &allocInfo, &commandBuffer);
-
-  // VkCommandBufferBeginInfo beginInfo{};
-  // beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  // beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-  // VkDeviceGroupCommandBufferBeginInfo deviceGroupCommandBufferBeginInfo{};
-  // deviceGroupCommandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO;
-  // deviceGroupCommandBufferBeginInfo.deviceMask = 1;
-  // beginInfo.pNext = &deviceGroupCommandBufferBeginInfo;
-
-
-  // vkBeginCommandBuffer(commandBuffer, &beginInfo);
-  // commandBuffers.push_back( commandBuffer);
-  // return commandBuffers;
+ 
 
   VkCommandBufferAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -765,25 +583,7 @@ std::vector<VkCommandBuffer> CFXDevice::beginSingleTimeCommands() {
 }
 
 void CFXDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
-  // int i=0;
-  // for(VkCommandBuffer commandBuffer: commandBuffers){
-  //   vkEndCommandBuffer(commandBuffer);
-
-  // VkSubmitInfo submitInfo{};
-  // VkDeviceGroupSubmitInfo deviceGroupSubmitInfo{};
-  // deviceGroupSubmitInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_SUBMIT_INFO;
-  // deviceGroupSubmitInfo.commandBufferCount = 1;
-  // deviceGroupSubmitInfo.pCommandBufferDeviceMasks = deviceMasks.data();
-  // submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  // submitInfo.commandBufferCount = 1;
-  // submitInfo.pCommandBuffers = &commandBuffer;
-
-  // vkQueueSubmit(graphicsQueues[i], 1, &submitInfo, VK_NULL_HANDLE);
-  // vkQueueWaitIdle(graphicsQueues[i]);
-
-  // vkFreeCommandBuffers(device_, commandPools[i], 1, &commandBuffer);
-  // i++;
-  // }
+ 
   vkEndCommandBuffer(commandBuffer);
 
   VkSubmitInfo submitInfo{};
@@ -848,42 +648,56 @@ void CFXDevice::createImageWithInfo(
     VkMemoryPropertyFlags properties,
     VkImage &image,
     VkDeviceMemory &imageMemory) {
-  if (vkCreateImage(device_, &imageInfo, nullptr, &image) != VK_SUCCESS) {
+
+      int bindImageMemoryCount = deviceIndices.size();
+      std::vector<VkBindImageMemoryInfo> imageMemoryInfos;
+      imageMemoryInfos.resize(bindImageMemoryCount);
+
+
+      for(int i=0; i< deviceMasks.size();i++){
+        if (vkCreateImage(device_, &imageInfo, nullptr, &image) != VK_SUCCESS) {
     throw std::runtime_error("failed to create image!");
   }
 
   VkMemoryRequirements memRequirements;
   vkGetImageMemoryRequirements(device_, image, &memRequirements);
+  VkMemoryAllocateFlagsInfo allocFlagsInfo{};
+  allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+  allocFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_MASK_BIT;
+  allocFlagsInfo.deviceMask = deviceMasks[i];
 
   VkMemoryAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memRequirements.size;
-  allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+  allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties,i);
+  allocInfo.pNext = &allocFlagsInfo;
 
   if (vkAllocateMemory(device_, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
     throw std::runtime_error("failed to allocate image memory!");
   }
 
-  if (vkBindImageMemory(device_, image, imageMemory, 0) != VK_SUCCESS) {
-    throw std::runtime_error("failed to bind image memory!");
-  }
-  // VkBindImageMemoryDeviceGroupInfo deviceGroupMemoryInfo{};
-  // std::vector<uint32_t> deviceIndices = {1,2};
-  // deviceGroupMemoryInfo.sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_DEVICE_GROUP_INFO;
-  // deviceGroupMemoryInfo.deviceIndexCount = physicalDevices.size();
-  // deviceGroupMemoryInfo.pDeviceIndices = deviceIndices.data();
-  // deviceGroupMemoryInfo.pSplitInstanceBindRegions = deviceRects.data();
-  // deviceGroupMemoryInfo.splitInstanceBindRegionCount = deviceRects.size();
-
-  // VkBindImageMemoryInfo memoryInfo{};
-  // memoryInfo.sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO;
-  // memoryInfo.image = image;
-  // memoryInfo.memory = imageMemory;
-  // memoryInfo.memoryOffset = 0;
-  // memoryInfo.pNext = &deviceGroupMemoryInfo;
-  // if(vkBindImageMemory2(device_,1,&memoryInfo) != VK_SUCCESS){
-  //   throw std::runtime_error("failed to bind image memory 2!");
+  // if (vkBindImageMemory(device_, image, imageMemory, 0) != VK_SUCCESS) {
+  //   throw std::runtime_error("failed to bind image memory!");
   // }
+  VkBindImageMemoryDeviceGroupInfo bindImageMemoryDeviceGroupInfo{};
+  bindImageMemoryDeviceGroupInfo.sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_DEVICE_GROUP_INFO;
+  bindImageMemoryDeviceGroupInfo.deviceIndexCount = deviceIndices.size();
+  bindImageMemoryDeviceGroupInfo.pDeviceIndices = deviceIndices.data();
+  VkBindImageMemoryInfo memoryInfo{};
+  memoryInfo.sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO;
+  memoryInfo.image = image;
+  memoryInfo.memory = imageMemory;
+  memoryInfo.memoryOffset = 0;
+  memoryInfo.pNext = &bindImageMemoryDeviceGroupInfo;
+  
+  imageMemoryInfos[i] = memoryInfo;    
+
+      
+  }
+  if(vkBindImageMemory2(device_,bindImageMemoryCount,imageMemoryInfos.data())!=VK_SUCCESS){
+    throw std::runtime_error("failed to bind image memory 2!");
+  }
+      
   
   
 }

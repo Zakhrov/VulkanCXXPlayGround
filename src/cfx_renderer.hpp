@@ -11,6 +11,11 @@
 #include <cassert>
 
 namespace cfx{
+    struct RenderBuffer{
+        VkCommandBuffer commandBuffer;
+        uint32_t deviceMask;
+        uint32_t deviceIndex;
+    };
     class Renderer{
         public:
         
@@ -19,7 +24,7 @@ namespace cfx{
         Renderer(const Renderer &) = delete;
         Renderer &operator=(const Renderer &) = delete;
 
-        VkCommandBuffer beginFrame();
+        RenderBuffer beginFrame();
         void endFrame();
         bool isFrameInProgress() const {return isFrameStarted;}
         VkCommandBuffer getCurrentCommandBuffer() const{ 
@@ -32,8 +37,8 @@ namespace cfx{
 
         }
         VkRenderPass getSwapChainRenderPass() const {return cfxSwapChain->getRenderPass();}
-        void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
-        void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
+        void beginSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask,uint32_t deviceIndex);
+        void endSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask);
         
 
 

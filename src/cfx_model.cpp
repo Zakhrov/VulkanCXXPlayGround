@@ -5,7 +5,7 @@
 
 
 namespace cfx{
-    CFXModel::CFXModel(CFXDevice& device,const std::vector<Vertex> &vertices ): cfxDevice{device}
+    CFXModel::CFXModel(CFXDevice& device,const std::vector<Vertex> &vertices): cfxDevice{device}
     {
         createVertexBuffers(vertices);
 
@@ -24,8 +24,7 @@ namespace cfx{
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
         vertexBuffer,
-        vertexBufferMemory
-        );
+        vertexBufferMemory);
         void *data;
         vkMapMemory(cfxDevice.device(),vertexBufferMemory,0,bufferSize,0,&data);
         memcpy(data,vertices.data(),static_cast<size_t>(bufferSize));

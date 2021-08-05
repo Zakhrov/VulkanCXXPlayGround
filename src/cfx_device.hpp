@@ -53,9 +53,18 @@ class CFXDevice {
   std::string getDeviceName(int deviceIndex){
     return deviceNames[deviceIndex];
   }
+  uint32_t getDeviceId(int deviceIndex){
+    return deviceIds[deviceIndex];
+  }
+  std::vector<uint32_t> getDeviceIds(){
+    return deviceIds;
+  }
+  std::vector<uint32_t> getDeviceMasks(){
+    return deviceMasks;
+  }
 
   std::vector<SwapChainSupportDetails> getSwapChainSupport() { return querySwapChainSupport(physicalDevices); }
-  uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+  uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties,int deviceIndex);
   std::vector<QueueFamilyIndices> findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevices); }
   VkFormat findSupportedFormat(
       const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
@@ -121,7 +130,8 @@ class CFXDevice {
 
   const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
   const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-  std::vector<uint32_t> deviceMasks = {1,2};
+  std::vector<uint32_t> deviceMasks;
+  std::vector<uint32_t> deviceIndices;
 
 };
 

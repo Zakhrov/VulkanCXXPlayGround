@@ -30,10 +30,11 @@ namespace cfx{
         CFXRenderSystem cfxRenderSystem{cfxDevice,cfxRenderer.getSwapChainRenderPass()};
         while(!window.shouldClose()){
 
-          if(auto commandBuffer = cfxRenderer.beginFrame()){
-            cfxRenderer.beginSwapChainRenderPass(commandBuffer);
-            cfxRenderSystem.renderGameObjects(commandBuffer,cfxGameObjects);
-            cfxRenderer.endSwapChainRenderPass(commandBuffer);
+          auto renderBuffer = cfxRenderer.beginFrame();
+          if(renderBuffer.commandBuffer != nullptr){
+            cfxRenderer.beginSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
+            cfxRenderSystem.renderGameObjects(renderBuffer.commandBuffer,cfxGameObjects,renderBuffer.deviceMask);
+            cfxRenderer.endSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask);
             cfxRenderer.endFrame();
           }
            
@@ -43,23 +44,84 @@ namespace cfx{
 
         vkDeviceWaitIdle(cfxDevice.device());
     }
+    // temporary helper function, creates a 1x1x1 cube centered at offset
+std::unique_ptr<CFXModel> createCubeModel(CFXDevice& device, glm::vec3 offset) {
+  std::vector<CFXModel::Vertex> vertices{
+
+      // left face (white)
+      {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+      {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+      {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
+      {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+      {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
+      {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+
+      // right face (yellow)
+      {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+      {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+      {{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
+      {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+      {{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
+      {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+
+      // top face (orange, remember y axis points down)
+      {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+      {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+      {{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+      {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+      {{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+      {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+
+      // bottom face (red)
+      {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+      {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+      {{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
+      {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+      {{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+      {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+
+      // nose face (blue)
+      {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+      {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+      {{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+      {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+      {{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+      {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+
+      // tail face (green)
+      {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+      {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+      {{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+      {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+      {{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+      {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+
+  };
+  for (auto& v : vertices) {
+    v.position += offset;
+  }
+  return std::make_unique<CFXModel>(device, vertices);
+}
 
     void App::loadGameObjects(){
         std::cout << "LOAD MODELS" << std::endl;
-        std::vector<CFXModel::Vertex> vertices {
-            {{0.0f,-0.5f},{1.0f,0.0f,0.0f}},
-            {{0.5f,0.5f},{.0f,1.0f,0.0f}},
-            {{-0.5f,0.5f},{0.0f,0.0f,1.0f}},
-        };
+        // std::vector<CFXModel::Vertex> vertices {
+        //     {{0.0f,-0.5f},{1.0f,0.0f,0.0f}},
+        //     {{0.5f,0.5f},{.0f,1.0f,0.0f}},
+        //     {{-0.5f,0.5f},{0.0f,0.0f,1.0f}},
+        // };
         // sierpinski(vertices, 5, {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.0f, -0.5f});
-        auto cfxModel = std::make_shared<CFXModel>(cfxDevice,vertices);
-        auto triangle = CFXGameObject::createGameObject();
-        triangle.model = cfxModel;
-        triangle.color = {.1f,.8f,.1f};
-        triangle.transform2d.translation.x = .2f;
-        triangle.transform2d.scale = {2.f,.5f};
-        triangle.transform2d.rotation = .25f * glm::two_pi<float>();
-        cfxGameObjects.push_back(std::move(triangle));
+        // auto cfxModel = std::make_shared<CFXModel>(cfxDevice,vertices);
+        
+
+          std::shared_ptr<CFXModel> cfxModel = createCubeModel(cfxDevice, {.0f, .0f, .0f});
+          auto cube = CFXGameObject::createGameObject();
+          cube.transformComponent.translation = {.0f,.0f,.5f};
+          cube.transformComponent.scale = {.5f,.5f,.5f};
+          cube.model = cfxModel;
+
+        
+        cfxGameObjects.push_back(std::move(cube));
     }
 
     

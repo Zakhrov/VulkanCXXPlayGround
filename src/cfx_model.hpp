@@ -13,12 +13,12 @@ namespace cfx {
     class CFXModel{
         public:
         struct Vertex{
-            glm::vec2 position;
+            glm::vec3 position;
             glm::vec3 color;
             static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
             static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
         };
-        CFXModel(CFXDevice& device,const std::vector<Vertex> &vertices );
+        CFXModel(CFXDevice& device,const std::vector<Vertex> &vertices);
         ~CFXModel();
         CFXModel(const CFXModel &) = delete;
         CFXModel &operator=(const CFXModel &) = delete;
@@ -31,6 +31,7 @@ namespace cfx {
         VkBuffer vertexBuffer;
         VkDeviceMemory vertexBufferMemory;
         uint32_t vertexCount;
+        
 
     };
 }

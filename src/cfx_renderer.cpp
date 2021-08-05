@@ -42,17 +42,7 @@ namespace cfx{
     }
 
      void Renderer::createCommandBuffers(){
-        //  commandBuffers.resize(cfxSwapChain->imageCount());
-        //  std::cout << "COMMAND BUFFER SIZE  " << commandBuffers.size() << std::endl;
-        //  VkCommandBufferAllocateInfo allocInfo{};
-        //  allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        //  allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        //  allocInfo.commandPool = cfxDevice.getCommandPool().front();
-        //  allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
-
-        //  if(vkAllocateCommandBuffers(cfxDevice.device(),&allocInfo,commandBuffers.data()) != VK_SUCCESS){
-        //      throw std::runtime_error("failed to allocate command buffers");
-        //  }
+       
 
       commandBuffers.resize(CFXSwapChain::MAX_FRAMES_IN_FLIGHT);
 
@@ -78,50 +68,61 @@ namespace cfx{
 
   
    
-    VkCommandBuffer Renderer::beginFrame(){
+    RenderBuffer Renderer::beginFrame(){
+        RenderBuffer renderBuffer{};
         assert(!isFrameStarted && "Cant call beginFrame while frame is in progress");
-            auto result = cfxSwapChain->acquireNextImage(&currentImageIndex);
+            isFrameStarted = true;
+        
+            auto commandBuffer = getCurrentCommandBuffer();
+            renderBuffer.commandBuffer = commandBuffer;
+            VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        if(cfxDevice.getDevicesinDeviceGroup() > 1 ){
+            if(currentImageIndex % 2 == 0){
+                deviceIndex = 0;
+            }
+            else{
+                deviceIndex = 1;
+            }
+            uint32_t dmask = cfxDevice.getDeviceMasks()[deviceIndex] & (deviceIndex + 1);
+            // std::cout << "APP DEVICE MASK " << dmask <<std::endl;
+            renderBuffer.deviceMask = dmask;
+            renderBuffer.deviceIndex = deviceIndex;
+            // std::cout << "PROCESSING FRAME " << currentFrameIndex << " PROCESSING IMAGE " << currentImageIndex << std::endl;
+            // std::cout << "VULKAN DEVICE INDEX BEGIN " << cfxDevice.getDeviceName(deviceIndex -1) << std::endl;
+          VkDeviceGroupCommandBufferBeginInfo deviceGroupCommandBufferInfo{};
+        deviceGroupCommandBufferInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO;
+        deviceGroupCommandBufferInfo.deviceMask = renderBuffer.deviceMask;
+        
+            
+            
+        beginInfo.pNext = &deviceGroupCommandBufferInfo;
+        
+
+        }
+            auto result = cfxSwapChain->acquireNextImage(&currentImageIndex,deviceIndex);
             if(result == VK_ERROR_OUT_OF_DATE_KHR){
                 recreateSwapChain();
-                return nullptr;
+                renderBuffer.commandBuffer = nullptr;
+                return renderBuffer;
             }
 
             if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR){
                 throw std::runtime_error("failed to aquire swap chain image");
             }
 
-            isFrameStarted = true;
-            auto commandBuffer = getCurrentCommandBuffer();
-            VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            
        
 
-        if(cfxDevice.getDevicesinDeviceGroup() > 1 ){
-            if(currentImageIndex % 2 == 0){
-                deviceIndex = 1;
-            }
-            else{
-                deviceIndex = 2;
-            }
-            // std::cout << "PROCESSING FRAME " << currentFrameIndex << " PROCESSING IMAGE " << currentImageIndex << std::endl;
-            // std::cout << "VULKAN DEVICE INDEX BEGIN " << cfxDevice.getDeviceName(deviceIndex -1) << std::endl;
-          VkDeviceGroupCommandBufferBeginInfo deviceGroupCommandBufferInfo{};
-        deviceGroupCommandBufferInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO;
-        deviceGroupCommandBufferInfo.deviceMask =  deviceIndex ;
-        // VkDeviceGroupRenderPassBeginInfo deviceGroupRenderPassInfo{};
-        //      deviceGroupRenderPassInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_RENDER_PASS_BEGIN_INFO;
-        //      deviceGroupRenderPassInfo.deviceMask = deviceIndex;
-        //      deviceGroupRenderPassInfo.deviceRenderAreaCount = cfxDevice.getDeviceRects().size();
-        //      deviceGroupRenderPassInfo.pDeviceRenderAreas = cfxDevice.getDeviceRects().data();
-            
-            
-        beginInfo.pNext = &deviceGroupCommandBufferInfo;
-
-        }
+        
         if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
                     throw std::runtime_error("failed to begin recording command buffer!");
           }
-        return commandBuffer;
+          vkCmdSetDeviceMask(commandBuffer,renderBuffer.deviceMask);
+          
+          
+          
+        return renderBuffer;
 
     }
     void Renderer::endFrame(){
@@ -149,7 +150,7 @@ namespace cfx{
 
 
     }
-    void Renderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer){
+    void Renderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask,uint32_t deviceIndex){
         assert(isFrameStarted && "Cant call beginSwapChainRenderPass if frame is not in progress");
         assert(commandBuffer == getCurrentCommandBuffer() && "cant begin renderpass on a command buffer from a different frame");
 
@@ -157,7 +158,7 @@ namespace cfx{
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = cfxSwapChain->getRenderPass();
-        renderPassInfo.framebuffer = cfxSwapChain->getFrameBuffer(currentImageIndex);
+        renderPassInfo.framebuffer = cfxSwapChain->getFrameBuffer(deviceIndex,currentImageIndex);
           // renderPassInfo.pNext = &deviceGroupRenderPassInfo;
 
         renderPassInfo.renderArea.offset = {0, 0};
@@ -168,6 +169,7 @@ namespace cfx{
         clearValues[1].depthStencil = {1.0f, 0};
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
+        vkCmdSetDeviceMask(commandBuffer,deviceMask);
 
       vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     //   std::cout << "BEGIN RENDER PASS" << std::endl;
@@ -190,9 +192,10 @@ namespace cfx{
 
 
     }
-    void Renderer::endSwapChainRenderPass(VkCommandBuffer commandBuffer){
+    void Renderer::endSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask){
         assert(isFrameStarted && "Cant call endSwapChainRenderPass if frame is not in progress");
         assert(commandBuffer == getCurrentCommandBuffer() && "cant end renderpass on a command buffer from a different frame");
+        vkCmdSetDeviceMask(commandBuffer,deviceMask);
         vkCmdEndRenderPass(commandBuffer);
         //   std::cout << "END RENDER PASS" << std::endl;
 

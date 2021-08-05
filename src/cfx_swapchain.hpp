@@ -20,10 +20,10 @@ namespace cfx{
   CFXSwapChain(const CFXSwapChain &) = delete;
   void operator=(const CFXSwapChain &) = delete;
 
-  VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
+  VkFramebuffer getFrameBuffer(int deviceIndex,int index) { return swapChainFramebuffers[deviceIndex][index]; }
   VkRenderPass getRenderPass() { return renderPass; }
-  VkImageView getImageView(int index) { return swapChainImageViews[index]; }
-  size_t imageCount() { return swapChainImages.size(); }
+  VkImageView getImageView(int deviceIndex,int index) { return swapChainImageViews[deviceIndex][index]; }
+  size_t imageCount(int deviceIndex) { return swapChainImages[deviceIndex].size(); }
   VkFormat getSwapChainImageFormat() { return swapChainImageFormat; }
   VkExtent2D getSwapChainExtent() { return swapChainExtent; }
   uint32_t width() { return swapChainExtent.width; }
@@ -34,20 +34,20 @@ namespace cfx{
   }
   VkFormat findDepthFormat();
 
-  VkResult acquireNextImage(uint32_t *imageIndex);
+  VkResult acquireNextImage(uint32_t *imageIndex,uint32_t deviceIndex);
   VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex,uint32_t deviceIndex);
   bool compareSwapFormats(const CFXSwapChain& cfxSwapChain) const {
       return cfxSwapChain.swapChainDepthFormat == swapChainDepthFormat && cfxSwapChain.swapChainImageFormat == swapChainImageFormat;
   }
 
  private:
-  void createSwapChain();
+  void createSwapChain(uint32_t deviceIndex);
   void init();
-  void createImageViews();
-  void createDepthResources();
-  void createRenderPass();
-  void createFramebuffers();
-  void createSyncObjects();
+  void createImageViews(uint32_t deviceIndex);
+  void createDepthResources(uint32_t deviceIndex);
+  void createRenderPass(uint32_t deviceIndex);
+  void createFramebuffers(uint32_t deviceIndex);
+  void createSyncObjects(uint32_t deviceIndex);
 
   // Helper functions
   VkSurfaceFormatKHR chooseSwapSurfaceFormat(
@@ -60,26 +60,26 @@ namespace cfx{
   VkFormat swapChainDepthFormat;
   VkExtent2D swapChainExtent;
 
-  std::vector<VkFramebuffer> swapChainFramebuffers;
+  std::vector<std::vector<VkFramebuffer>> swapChainFramebuffers;
   VkRenderPass renderPass;
 
-  std::vector<VkImage> depthImages;
-  std::vector<VkDeviceMemory> depthImageMemorys;
-  std::vector<VkImageView> depthImageViews;
-  std::vector<VkImage> swapChainImages;
-  std::vector<VkImageView> swapChainImageViews;
+  std::vector<std::vector<VkImage>> depthImages;
+  std::vector<std::vector<VkDeviceMemory>> depthImageMemorys;
+  std::vector<std::vector<VkImageView>> depthImageViews;
+  std::vector<std::vector<VkImage>> swapChainImages;
+  std::vector<std::vector<VkImageView>> swapChainImageViews;
 
   CFXDevice &device;
   VkExtent2D windowExtent;
 
-  VkSwapchainKHR swapChain;
+  std::vector<VkSwapchainKHR> swapChains;
   std::shared_ptr<CFXSwapChain> oldSwapChain;
 
 
-  std::vector<VkSemaphore> imageAvailableSemaphores;
-  std::vector<VkSemaphore> renderFinishedSemaphores;
-  std::vector<VkFence> inFlightFences;
-  std::vector<VkFence> imagesInFlight;
+  std::vector<std::vector<VkSemaphore>> imageAvailableSemaphores;
+  std::vector<std::vector<VkSemaphore>> renderFinishedSemaphores;
+  std::vector<std::vector<VkFence>> inFlightFences;
+  std::vector<std::vector<VkFence>> imagesInFlight;
   size_t currentFrame = 0;
   std::vector<uint32_t> deviceMasks = {1,2};
     };

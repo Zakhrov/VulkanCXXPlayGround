@@ -23,81 +23,96 @@ CFXSwapChain::CFXSwapChain(CFXDevice &deviceRef, VkExtent2D extent,std::shared_p
   
 }
 void CFXSwapChain::init(){
-  createSwapChain();
-  createImageViews();
-  createRenderPass();
-  createDepthResources();
-  createFramebuffers();
-  createSyncObjects();
+  // deviceMasks.resize(device.getDeviceIds().size());
+  deviceMasks = device.getDeviceMasks();
+  swapChains.resize(deviceMasks.size());
+  swapChainImages.resize(deviceMasks.size());
+  swapChainImageViews.resize(swapChainImages.size());
+  depthImages.resize(deviceMasks.size());
+  depthImageMemorys.resize(deviceMasks.size());
+  depthImageViews.resize(deviceMasks.size());
+  imageAvailableSemaphores.resize(deviceMasks.size());
+  renderFinishedSemaphores.resize(deviceMasks.size());
+  inFlightFences.resize(deviceMasks.size());
+  imagesInFlight.resize(deviceMasks.size());
+
+  for(int i=0; i< deviceMasks.size();i++){
+    createSwapChain(i);
+    createImageViews(i);
+    createDepthResources(i);
+    createRenderPass(i);
+    createFramebuffers(i);
+    createSyncObjects(i);
+  }
+  
+  
+  
+  
+  
 }
 
 CFXSwapChain::~CFXSwapChain() {
-  for (auto imageView : swapChainImageViews) {
-    vkDestroyImageView(device.device(), imageView, nullptr);
+  for (auto imageViewArray : swapChainImageViews) {
+    for(auto imageView: imageViewArray){
+      vkDestroyImageView(device.device(), imageView, nullptr);
+    }
+    
   }
   swapChainImageViews.clear();
 
-  vkDestroySwapchainKHR(device.device(), swapChain, nullptr);
-
-  for (int i = 0; i < depthImages.size(); i++) {
-    vkDestroyImageView(device.device(), depthImageViews[i], nullptr);
-    vkDestroyImage(device.device(), depthImages[i], nullptr);
-    vkFreeMemory(device.device(), depthImageMemorys[i], nullptr);
+  for(auto swapChain : swapChains){
+    vkDestroySwapchainKHR(device.device(), swapChain, nullptr);
   }
 
-  for (auto framebuffer : swapChainFramebuffers) {
-    vkDestroyFramebuffer(device.device(), framebuffer, nullptr);
+  for (int i = 0; i < depthImages.size(); i++) {
+    for(int j=0; j< depthImages[i].size(); j++){
+      vkDestroyImageView(device.device(), depthImageViews[i][j], nullptr);
+    vkDestroyImage(device.device(), depthImages[i][j], nullptr);
+    vkFreeMemory(device.device(), depthImageMemorys[i][j], nullptr);
+
+    }
+    
+  }
+
+  for (auto frameBufferArray : swapChainFramebuffers) {
+    for(auto frameBuffer: frameBufferArray){
+      vkDestroyFramebuffer(device.device(), frameBuffer, nullptr);
+    }
+    
   }
 
   vkDestroyRenderPass(device.device(), renderPass, nullptr);
 
   // cleanup synchronization objects
-  for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-    vkDestroySemaphore(device.device(), renderFinishedSemaphores[i], nullptr);
-    vkDestroySemaphore(device.device(), imageAvailableSemaphores[i], nullptr);
-    vkDestroyFence(device.device(), inFlightFences[i], nullptr);
+  for(size_t di = 0; di < deviceMasks.size(); di++){
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    vkDestroySemaphore(device.device(), renderFinishedSemaphores[di][i], nullptr);
+    vkDestroySemaphore(device.device(), imageAvailableSemaphores[di][i], nullptr);
+    vkDestroyFence(device.device(), inFlightFences[di][i], nullptr);
   }
+  }
+  
 }
 
-VkResult CFXSwapChain::acquireNextImage(uint32_t *imageIndex) {
-//   vkWaitForFences(
-//       device.device(),
-//       1,
-//       &inFlightFences[currentFrame],
-//       VK_TRUE,
-//       std::numeric_limits<uint64_t>::max());
-      
-// VkResult result;
-//   //  for(int i=0; i<swapChains.size();i++){
-      
-//   //  }
-//   result = vkAcquireNextImageKHR(
-//       device.device(),
-//       swapChains[0],
-//       std::numeric_limits<uint64_t>::max(),
-//       imageAvailableSemaphores[currentFrame],  // must be a not signaled semaphore
-//       VK_NULL_HANDLE,
-//       imageIndex);
-//       if(result != VK_SUCCESS){
-//         throw std::runtime_error("failed to get next image!");
-//       }
+VkResult CFXSwapChain::acquireNextImage(uint32_t *imageIndex,uint32_t deviceIndex) {
 
-
-//   return result;
  vkWaitForFences(
       device.device(),
       1,
-      &inFlightFences[currentFrame],
+      &inFlightFences[deviceIndex][currentFrame],
       VK_TRUE,
       std::numeric_limits<uint64_t>::max());
+      VkAcquireNextImageInfoKHR nextImageInfo{};
+      nextImageInfo.sType = VK_STRUCTURE_TYPE_ACQUIRE_NEXT_IMAGE_INFO_KHR;
+      nextImageInfo.swapchain = swapChains[deviceIndex];
+      nextImageInfo.timeout = std::numeric_limits<uint64_t>::max();
+      nextImageInfo.semaphore = imageAvailableSemaphores[deviceIndex][currentFrame];
+      nextImageInfo.fence = inFlightFences[deviceIndex][currentFrame];
+      nextImageInfo.deviceMask = deviceMasks[deviceIndex];
 
-  VkResult result = vkAcquireNextImageKHR(
-      device.device(),
-      swapChain,
-      std::numeric_limits<uint64_t>::max(),
-      imageAvailableSemaphores[currentFrame],  // must be a not signaled semaphore
-      VK_NULL_HANDLE,
-      imageIndex);
+
+  VkResult result = vkAcquireNextImage2KHR(device.device(),&nextImageInfo,imageIndex);
+      
 
   return result;
 }
@@ -105,25 +120,25 @@ VkResult CFXSwapChain::acquireNextImage(uint32_t *imageIndex) {
 VkResult CFXSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex,uint32_t deviceIndex) {
      
  
-  // std::cout << "INSIDE SUBMIT_COMMAND_BUFFER" << std::endl;
+  std::cout << "INSIDE SUBMIT_COMMAND_BUFFER" << std::endl;
 
    VkDeviceGroupPresentInfoKHR deviceGroupPresentInfo{};
   deviceGroupPresentInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_PRESENT_INFO_KHR;
   deviceGroupPresentInfo.swapchainCount = 1;
   deviceGroupPresentInfo.pDeviceMasks = &deviceMasks[deviceIndex];
-  deviceGroupPresentInfo.mode = deviceIndex == 1 ? VK_DEVICE_GROUP_PRESENT_MODE_LOCAL_BIT_KHR : VK_DEVICE_GROUP_PRESENT_MODE_REMOTE_BIT_KHR;
+  deviceGroupPresentInfo.mode = deviceIndex == 0 ? VK_DEVICE_GROUP_PRESENT_MODE_LOCAL_BIT_KHR : VK_DEVICE_GROUP_PRESENT_MODE_REMOTE_BIT_KHR;
 
   VkDeviceGroupSubmitInfo deviceGroupSubmitInfo{};
 
   
 
 
-  imagesInFlight[*imageIndex] = inFlightFences[currentFrame];
+  imagesInFlight[deviceIndex][*imageIndex] = inFlightFences[deviceIndex][currentFrame];
 
   VkSubmitInfo submitInfo = {};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-  std::vector<VkSemaphore> waitSemaphores = {imageAvailableSemaphores[currentFrame]};
+  std::vector<VkSemaphore> waitSemaphores = {imageAvailableSemaphores[deviceIndex][currentFrame]};
   std::vector<uint32_t> waitSemaphoreIndices = {0};
   VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
   submitInfo.waitSemaphoreCount = 1;
@@ -133,7 +148,7 @@ VkResult CFXSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = buffers;
 
-  std::vector<VkSemaphore> signalSemaphores = {renderFinishedSemaphores[currentFrame]};
+  std::vector<VkSemaphore> signalSemaphores = {renderFinishedSemaphores[deviceIndex][currentFrame]};
   std::vector<uint32_t> signalSemaphoreIndices = {0};
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = signalSemaphores.data();
@@ -149,8 +164,8 @@ VkResult CFXSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint
 
   submitInfo.pNext = &deviceGroupSubmitInfo;
 
-  vkResetFences(device.device(), 1, &inFlightFences[currentFrame]);
-  if (vkQueueSubmit(device.getGraphicsQueues()[0], 1, &submitInfo, inFlightFences[currentFrame]) !=
+  vkResetFences(device.device(), 1, &inFlightFences[deviceIndex][currentFrame]);
+  if (vkQueueSubmit(device.getGraphicsQueues()[deviceIndex], 1, &submitInfo, inFlightFences[deviceIndex][currentFrame]) !=
       VK_SUCCESS) {
     throw std::runtime_error("failed to submit draw command buffer!");
   }
@@ -161,23 +176,22 @@ VkResult CFXSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint
   presentInfo.waitSemaphoreCount = 1;
   presentInfo.pWaitSemaphores = signalSemaphores.data();
 
-  VkSwapchainKHR swapChains[] = {swapChain};
-  presentInfo.swapchainCount = 1;
-  presentInfo.pSwapchains = swapChains;
+  presentInfo.swapchainCount = swapChains.size();
+  presentInfo.pSwapchains = swapChains.data();
 
   presentInfo.pImageIndices = imageIndex;
   presentInfo.pNext = &deviceGroupPresentInfo;
 
-  auto result = vkQueuePresentKHR(device.getPresentQueues()[0], &presentInfo);
+  auto result = vkQueuePresentKHR(device.getPresentQueues()[deviceIndex], &presentInfo);
 
   currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
   return result;
 }
 
-void CFXSwapChain::createSwapChain() {
+void CFXSwapChain::createSwapChain(uint32_t deviceIndex) {
   
-   SwapChainSupportDetails swapChainSupport = device.getSwapChainSupport()[0];
+   SwapChainSupportDetails swapChainSupport = device.getSwapChainSupport()[deviceIndex];
 
   VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
   VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -219,16 +233,17 @@ void CFXSwapChain::createSwapChain() {
     break;
   }
   
-   if(vkGetDeviceGroupSurfacePresentModesKHR(device.device(),device.surface()[0],&deviceGroupPresentCapabilites.modes)!= VK_SUCCESS){
+   if(vkGetDeviceGroupSurfacePresentModesKHR(device.device(),device.surface()[deviceIndex],&deviceGroupPresentCapabilites.modes)!= VK_SUCCESS){
         throw std::runtime_error("failed to get device group surface present modes");
       }
+      std::cout<< "GET DEVICEGROUPSURFACEPRESENTMODE " << deviceIndex << std::endl;
 
   deviceGroupSwapchainInfo.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_SWAPCHAIN_CREATE_INFO_KHR;
   deviceGroupSwapchainInfo.modes = VK_DEVICE_GROUP_PRESENT_MODE_LOCAL_BIT_KHR | VK_DEVICE_GROUP_PRESENT_MODE_REMOTE_BIT_KHR;
 
   VkSwapchainCreateInfoKHR createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-  createInfo.surface = device.surface()[0];
+  createInfo.surface = device.surface()[deviceIndex];
 
   createInfo.minImageCount = imageCount;
   createInfo.imageFormat = surfaceFormat.format;
@@ -237,7 +252,7 @@ void CFXSwapChain::createSwapChain() {
   createInfo.imageArrayLayers = 1;
   createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-  QueueFamilyIndices indices = device.findPhysicalQueueFamilies()[0];
+  QueueFamilyIndices indices = device.findPhysicalQueueFamilies()[deviceIndex];
   uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
 
   if (indices.graphicsFamily != indices.presentFamily) {
@@ -259,17 +274,23 @@ void CFXSwapChain::createSwapChain() {
   createInfo.oldSwapchain = VK_NULL_HANDLE;
   createInfo.pNext = &deviceGroupSwapchainInfo;
 
-  if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
+  if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChains[deviceIndex]) != VK_SUCCESS) {
     throw std::runtime_error("failed to create swap chain!");
   }
+  std::cout<< "CREATE SWAP CHAIN " << deviceIndex << std::endl;
 
   // we only specified a minimum number of images in the swap chain, so the implementation is
   // allowed to create a swap chain with more. That's why we'll first query the final number of
   // images with vkGetSwapchainImagesKHR, then resize the container and finally call it again to
   // retrieve the handles.
-  vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, nullptr);
-  swapChainImages.resize(imageCount);
-  vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, swapChainImages.data());
+  if(vkGetSwapchainImagesKHR(device.device(), swapChains[deviceIndex], &imageCount, nullptr)!=VK_SUCCESS){
+    throw std::runtime_error("failed to get swap chain images!");
+  }
+  swapChainImages[deviceIndex].resize(imageCount);
+  if(vkGetSwapchainImagesKHR(device.device(), swapChains[deviceIndex], &imageCount, swapChainImages[deviceIndex].data())!=VK_SUCCESS){
+    throw std::runtime_error("failed to get swap chain images!");
+  }
+  std::cout<< "CREATE SWAPCHAIN IMAGES " << deviceIndex << std::endl;
 
   swapChainImageFormat = surfaceFormat.format;
   swapChainExtent = extent;
@@ -278,31 +299,15 @@ void CFXSwapChain::createSwapChain() {
   
 }
 
-void CFXSwapChain::createImageViews() {
-  // swapChainImageViews.resize(swapChainImages.size());
-  // for (size_t i = 0; i < swapChainImages.size(); i++) {
-  //   VkImageViewCreateInfo viewInfo{};
-  //   viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  //   viewInfo.image = swapChainImages[i];
-  //   viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-  //   viewInfo.format = swapChainImageFormat;
-  //   viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-  //   viewInfo.subresourceRange.baseMipLevel = 0;
-  //   viewInfo.subresourceRange.levelCount = 1;
-  //   viewInfo.subresourceRange.baseArrayLayer = 0;
-  //   viewInfo.subresourceRange.layerCount = 1;
+void CFXSwapChain::createImageViews(uint32_t deviceIndex) {
+  std::cout<< "CREATE IMAGE VIEWS " << deviceIndex << std::endl;
 
-  //   if (vkCreateImageView(device.device(), &viewInfo, nullptr, &swapChainImageViews[i]) !=
-  //       VK_SUCCESS) {
-  //     throw std::runtime_error("failed to create texture image view!");
-  //   }
-  // }
-
-   swapChainImageViews.resize(swapChainImages.size());
-  for (size_t i = 0; i < swapChainImages.size(); i++) {
+   
+   swapChainImageViews[deviceIndex].resize(swapChainImages[deviceIndex].size());
+  for (size_t i = 0; i < swapChainImages[deviceIndex].size(); i++) { 
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    viewInfo.image = swapChainImages[i];
+    viewInfo.image = swapChainImages[deviceIndex][i];
     viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
     viewInfo.format = swapChainImageFormat;
     viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -311,14 +316,17 @@ void CFXSwapChain::createImageViews() {
     viewInfo.subresourceRange.baseArrayLayer = 0;
     viewInfo.subresourceRange.layerCount = 1;
 
-    if (vkCreateImageView(device.device(), &viewInfo, nullptr, &swapChainImageViews[i]) !=
+    if (vkCreateImageView(device.device(), &viewInfo, nullptr, &swapChainImageViews[deviceIndex][i]) !=
         VK_SUCCESS) {
       throw std::runtime_error("failed to create texture image view!");
     }
+    
   }
+  std::cout<< "CREATE IMAGE VIEWS END " << deviceIndex << std::endl;
 }
 
-void CFXSwapChain::createRenderPass() {
+void CFXSwapChain::createRenderPass(uint32_t deviceIndex) {
+  std::cout << "CREATE RENDER PASS " << deviceIndex <<std::endl;
   VkAttachmentDescription depthAttachment{};
   depthAttachment.format = findDepthFormat();
   depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -378,12 +386,14 @@ void CFXSwapChain::createRenderPass() {
   if (vkCreateRenderPass(device.device(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
     throw std::runtime_error("failed to create render pass!");
   }
+  std::cout << "CREATE RENDER PASS END " <<std::endl;
 }
 
-void CFXSwapChain::createFramebuffers() {
-  swapChainFramebuffers.resize(imageCount());
-  for (size_t i = 0; i < imageCount(); i++) {
-    std::array<VkImageView, 2> attachments = {swapChainImageViews[i], depthImageViews[i]};
+void CFXSwapChain::createFramebuffers(uint32_t deviceIndex ) {
+  std::cout << "CREATE FRAME BUFFER " << deviceIndex <<std::endl;
+  swapChainFramebuffers[deviceIndex].resize(imageCount(deviceIndex));
+  for (size_t i = 0; i < imageCount(deviceIndex); i++) {
+    std::array<VkImageView, 2> attachments = {swapChainImageViews[deviceIndex][i], depthImageViews[deviceIndex][i]};
 
     VkExtent2D swapChainExtent = getSwapChainExtent();
     VkFramebufferCreateInfo framebufferInfo = {};
@@ -399,22 +409,24 @@ void CFXSwapChain::createFramebuffers() {
             device.device(),
             &framebufferInfo,
             nullptr,
-            &swapChainFramebuffers[i]) != VK_SUCCESS) {
+            &swapChainFramebuffers[deviceIndex][i]) != VK_SUCCESS) {
       throw std::runtime_error("failed to create framebuffer!");
     }
   }
+  std::cout << "CREATE FRAME BUFFER END " << deviceIndex <<std::endl;
 }
 
-void CFXSwapChain::createDepthResources() {
+void CFXSwapChain::createDepthResources(uint32_t deviceIndex) {
+  std::cout << "CREATE DEPTH RESOURCES "  << deviceIndex <<std::endl;
   VkFormat depthFormat = findDepthFormat();
   swapChainDepthFormat = depthFormat;
   VkExtent2D swapChainExtent = getSwapChainExtent();
 
-  depthImages.resize(imageCount());
-  depthImageMemorys.resize(imageCount());
-  depthImageViews.resize(imageCount());
+  depthImages[deviceIndex].resize(imageCount(deviceIndex));
+  depthImageMemorys[deviceIndex].resize(imageCount(deviceIndex));
+  depthImageViews[deviceIndex].resize(imageCount(deviceIndex));
 
-  for (int i = 0; i < depthImages.size(); i++) {
+  for (int i = 0; i < depthImages[deviceIndex].size(); i++) {
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -429,18 +441,18 @@ void CFXSwapChain::createDepthResources() {
     imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    imageInfo.flags = 0;
+    imageInfo.flags = VK_IMAGE_CREATE_SPLIT_INSTANCE_BIND_REGIONS_BIT;
     
 
     device.createImageWithInfo(
         imageInfo,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        depthImages[i],
-        depthImageMemorys[i]);
+        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        depthImages[deviceIndex][i],
+        depthImageMemorys[deviceIndex][i]);
 
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    viewInfo.image = depthImages[i];
+    viewInfo.image = depthImages[deviceIndex][i];
     viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
     viewInfo.format = depthFormat;
     viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
@@ -449,17 +461,19 @@ void CFXSwapChain::createDepthResources() {
     viewInfo.subresourceRange.baseArrayLayer = 0;
     viewInfo.subresourceRange.layerCount = 1;
 
-    if (vkCreateImageView(device.device(), &viewInfo, nullptr, &depthImageViews[i]) != VK_SUCCESS) {
+    if (vkCreateImageView(device.device(), &viewInfo, nullptr, &depthImageViews[deviceIndex][i]) != VK_SUCCESS) {
       throw std::runtime_error("failed to create texture image view!");
     }
   }
+  std::cout << "CREATE DEPTH RESOURCES END"  << deviceIndex <<std::endl;
 }
 
-void CFXSwapChain::createSyncObjects() {
-  imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-  renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-  inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-  imagesInFlight.resize(imageCount(), VK_NULL_HANDLE);
+void CFXSwapChain::createSyncObjects(uint32_t deviceIndex) {
+  std::cout << "CREATE SYNC OBJECTS "  << deviceIndex <<std::endl;
+  imageAvailableSemaphores[deviceIndex].resize(MAX_FRAMES_IN_FLIGHT);
+  renderFinishedSemaphores[deviceIndex].resize(MAX_FRAMES_IN_FLIGHT);
+  inFlightFences[deviceIndex].resize(MAX_FRAMES_IN_FLIGHT);
+  imagesInFlight[deviceIndex].resize(imageCount(deviceIndex), VK_NULL_HANDLE);
 
   VkSemaphoreCreateInfo semaphoreInfo = {};
   semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -469,14 +483,15 @@ void CFXSwapChain::createSyncObjects() {
   fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-    if (vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) !=
+    if (vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[deviceIndex][i]) !=
             VK_SUCCESS ||
-        vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) !=
+        vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[deviceIndex][i]) !=
             VK_SUCCESS ||
-        vkCreateFence(device.device(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
+        vkCreateFence(device.device(), &fenceInfo, nullptr, &inFlightFences[deviceIndex][i]) != VK_SUCCESS) {
       throw std::runtime_error("failed to create synchronization objects for a frame!");
     }
   }
+  std::cout << "CREATE SYNC OBJECTS EMD "  << deviceIndex <<std::endl;
 }
 
 VkSurfaceFormatKHR CFXSwapChain::chooseSwapSurfaceFormat(

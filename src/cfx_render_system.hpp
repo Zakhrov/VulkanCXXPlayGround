@@ -16,7 +16,7 @@ namespace cfx{
         ~CFXRenderSystem();
         CFXRenderSystem(const CFXRenderSystem &) = delete;
         CFXRenderSystem &operator=(const CFXRenderSystem &) = delete;
-        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<CFXGameObject> &gameObjects);
+        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<CFXGameObject> &gameObjects,uint32_t deviceMask);
         
 
 
