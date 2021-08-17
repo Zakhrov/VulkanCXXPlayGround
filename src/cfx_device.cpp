@@ -247,6 +247,11 @@ void CFXDevice::createLogicalDevice() {
     }
    }
    createInfo.pNext = &deviceGroupInfo;
+   int discreteDeviceIndex = 0;
+
+   
+
+
 
   if (vkCreateDevice(physicalDevices[0], &createInfo, nullptr, &device_) != VK_SUCCESS) {
     throw std::runtime_error("failed to create logical device!");
@@ -503,10 +508,10 @@ void CFXDevice::createBuffer(
 
       
   int deviceIndex = 0;
-  int bindInfoCount = deviceMasks.size();
+  int bindInfoCount = getDevicesinDeviceGroup();
   std::vector<VkBindBufferMemoryInfo> bufferMemoryInfos;
   bufferMemoryInfos.resize(bindInfoCount);
-  for(int i =0; i < deviceMasks.size();i++){
+  for(int i =0; i < getDevicesinDeviceGroup();i++){
 
     VkBufferCreateInfo bufferInfo{};
   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -525,14 +530,20 @@ void CFXDevice::createBuffer(
   
   VkMemoryAllocateFlagsInfo allocFlagsInfo{};
   allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
-  allocFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_MASK_BIT;
+  allocFlagsInfo.flags =  VK_MEMORY_ALLOCATE_DEVICE_MASK_BIT;
   allocFlagsInfo.deviceMask = deviceMasks[i];
 
     VkMemoryAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memRequirements.size;
   allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties,i);
+  if(getDevicesinDeviceGroup() > 1){
   allocInfo.pNext = &allocFlagsInfo;
+  }
+  else{
+    allocInfo.pNext = nullptr;
+  }
+  
 
   if (vkAllocateMemory(device_, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
     throw std::runtime_error("failed to allocate vertex buffer memory!");
@@ -548,7 +559,13 @@ void CFXDevice::createBuffer(
   memoryInfo.buffer = buffer;
   memoryInfo.memory = bufferMemory;
   memoryInfo.memoryOffset = 0;
-  memoryInfo.pNext = &bindBufferMemoryDeviceGroupInfo;
+  if(getDevicesinDeviceGroup() > 1){
+    memoryInfo.pNext = &bindBufferMemoryDeviceGroupInfo;
+  }
+  else{
+    memoryInfo.pNext = nullptr;
+  }
+  
   bufferMemoryInfos[i] = memoryInfo;    
   }
   if(vkBindBufferMemory2(device_,bindInfoCount,bufferMemoryInfos.data())!=VK_SUCCESS){
@@ -670,7 +687,13 @@ void CFXDevice::createImageWithInfo(
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memRequirements.size;
   allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties,i);
-  allocInfo.pNext = &allocFlagsInfo;
+  if(getDevicesinDeviceGroup() > 1){
+    allocInfo.pNext = &allocFlagsInfo;
+  }
+  else{
+    allocInfo.pNext = nullptr;
+  }
+  
 
   if (vkAllocateMemory(device_, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
     throw std::runtime_error("failed to allocate image memory!");

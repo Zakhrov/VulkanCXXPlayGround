@@ -69,6 +69,7 @@ namespace cfx{
   
    
     RenderBuffer Renderer::beginFrame(){
+        // std::cout << "BEGIN FRAME"<< std::endl;
         RenderBuffer renderBuffer{};
         assert(!isFrameStarted && "Cant call beginFrame while frame is in progress");
             isFrameStarted = true;
@@ -100,6 +101,12 @@ namespace cfx{
         
 
         }
+        else{
+            renderBuffer.deviceIndex = 0;
+            renderBuffer.deviceMask = 1;
+            deviceIndex = 0;
+
+        }
             auto result = cfxSwapChain->acquireNextImage(&currentImageIndex,deviceIndex);
             if(result == VK_ERROR_OUT_OF_DATE_KHR){
                 recreateSwapChain();
@@ -118,7 +125,10 @@ namespace cfx{
         if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
                     throw std::runtime_error("failed to begin recording command buffer!");
           }
-          vkCmdSetDeviceMask(commandBuffer,renderBuffer.deviceMask);
+          if(cfxDevice.getDevicesinDeviceGroup() > 1){
+              vkCmdSetDeviceMask(commandBuffer,renderBuffer.deviceMask);
+          }
+          
           
           
           
@@ -169,7 +179,10 @@ namespace cfx{
         clearValues[1].depthStencil = {1.0f, 0};
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
-        vkCmdSetDeviceMask(commandBuffer,deviceMask);
+        if(cfxDevice.getDevicesinDeviceGroup() > 1){
+              vkCmdSetDeviceMask(commandBuffer,deviceMask);
+          }
+        
 
       vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     //   std::cout << "BEGIN RENDER PASS" << std::endl;
@@ -195,7 +208,9 @@ namespace cfx{
     void Renderer::endSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask){
         assert(isFrameStarted && "Cant call endSwapChainRenderPass if frame is not in progress");
         assert(commandBuffer == getCurrentCommandBuffer() && "cant end renderpass on a command buffer from a different frame");
-        vkCmdSetDeviceMask(commandBuffer,deviceMask);
+        if(cfxDevice.getDevicesinDeviceGroup() > 1){
+              vkCmdSetDeviceMask(commandBuffer,deviceMask);
+          }
         vkCmdEndRenderPass(commandBuffer);
         //   std::cout << "END RENDER PASS" << std::endl;
 

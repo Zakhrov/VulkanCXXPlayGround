@@ -39,6 +39,7 @@ namespace cfx{
         VkRenderPass getSwapChainRenderPass() const {return cfxSwapChain->getRenderPass();}
         void beginSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask,uint32_t deviceIndex);
         void endSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask);
+        float getAspectRatio() const {return cfxSwapChain->extentAspectRatio(); }
         
 
 

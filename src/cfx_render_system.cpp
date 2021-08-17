@@ -13,7 +13,9 @@
 namespace cfx{
   struct SimplePushConstantData{
     glm::mat4 transform{1.f};
-    alignas(16) glm::vec3 color;
+    glm::mat4 modelMatrix{1.f};
+    // alignas(16) glm::vec3 color;
+
 
   };
     CFXRenderSystem::CFXRenderSystem(CFXDevice& device,VkRenderPass renderpass): cfxDevice{device} {
@@ -28,16 +30,20 @@ namespace cfx{
     }
     
 
-    void CFXRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,std::vector<CFXGameObject> &cfxGameObjects,uint32_t deviceMask){
+    void CFXRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,std::vector<CFXGameObject> &cfxGameObjects,uint32_t deviceMask, const CFXCamera camera){
+      // std::cout << "RENDER GAME OBJECTS"<< std::endl;
       cfxPipeLine->bind(commandBuffer);
+      auto projectionView = camera.getProjection() * camera.getView();
 
   for (auto& obj : cfxGameObjects) {
-    obj.transformComponent.rotation.y = glm::mod(obj.transformComponent.rotation.y + 0.01f, glm::two_pi<float>());
-    obj.transformComponent.rotation.x = glm::mod(obj.transformComponent.rotation.x + 0.005f, glm::two_pi<float>());
+    // obj.transformComponent.rotation.y = glm::mod(obj.transformComponent.rotation.y + 0.01f, glm::two_pi<float>());
+    // obj.transformComponent.rotation.x = glm::mod(obj.transformComponent.rotation.x + 0.005f, glm::two_pi<float>());
 
     SimplePushConstantData push{};
-    push.color = obj.color;
-    push.transform = obj.transformComponent.mat4();
+    auto  modelMatrix = obj.transformComponent.mat4();
+
+    push.transform = projectionView * modelMatrix;
+    push.modelMatrix = modelMatrix;
 
     vkCmdPushConstants(
         commandBuffer,
@@ -48,6 +54,7 @@ namespace cfx{
         &push);
     obj.model->bind(commandBuffer);
     obj.model->draw(commandBuffer);
+    // std::cout << "RENDER GAME OBJECTS END"<< std::endl;
   }
 }
     void CFXRenderSystem::createPipelineLayout(){
@@ -69,7 +76,7 @@ namespace cfx{
     }
     void CFXRenderSystem::createPipeline(VkRenderPass renderpass){
       
-        std::cout << "CREATE PIPELINE"<< std::endl;
+        // std::cout << "CREATE PIPELINE"<< std::endl;
         PipelineConfigInfo pipelineConfig{};
         CFXPipeLine::defaultPipelineConfigInfo(pipelineConfig);
         pipelineConfig.renderPass = renderpass;
@@ -77,6 +84,7 @@ namespace cfx{
         cfxPipeLine = std::make_unique<CFXPipeLine>(cfxDevice,pipelineConfig,
         "shaders/simple_shader.vert.spv",
         "shaders/simple_shader.frag.spv");
+        // std::cout << "CREATE PIPELINE END"<< std::endl;
 
     }
   

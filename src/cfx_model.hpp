@@ -6,6 +6,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <vector>
+#include <memory>
 
 
 
@@ -13,24 +14,45 @@ namespace cfx {
     class CFXModel{
         public:
         struct Vertex{
-            glm::vec3 position;
-            glm::vec3 color;
+            glm::vec3 position{};
+            glm::vec3 color{};
+            glm::vec3 normal{};
+            glm::vec2 uv{};
+            uint32_t hash = 0;
             static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
             static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
+
+            bool operator==(const Vertex &other)const{
+                return position == other.position && color == other.color && normal == other.normal && uv == other.uv;
+            }
         };
-        CFXModel(CFXDevice& device,const std::vector<Vertex> &vertices);
+        struct Builder{
+            std::vector<Vertex> vertices{};
+            std::vector<uint32_t> indices{};
+            void loadModel(const std::string &filepath);
+        };
+        CFXModel(CFXDevice& device,const CFXModel::Builder &builder);
         ~CFXModel();
         CFXModel(const CFXModel &) = delete;
         CFXModel &operator=(const CFXModel &) = delete;
+
+        static std::unique_ptr<CFXModel> createModelFromFile(CFXDevice &device,const std::string &filepath);
 
         void bind(VkCommandBuffer commandBuffer);
         void draw(VkCommandBuffer commandBuffer);
         private:
         void createVertexBuffers(const std::vector<Vertex> &vertices);
+        void createIndexBuffers(const std::vector<uint32_t> &indices);
         CFXDevice& cfxDevice;
         VkBuffer vertexBuffer;
         VkDeviceMemory vertexBufferMemory;
         uint32_t vertexCount;
+
+        bool hasIndexBuffer = false;
+
+        VkBuffer indexBuffer;
+        VkDeviceMemory indexBufferMemory;
+        uint32_t indexCount;
         
 
     };

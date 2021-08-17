@@ -3,6 +3,7 @@
 
 #include "cfx_pipeline.hpp"
 #include "cfx_device.hpp"
+#include "cfx_camera.hpp"
 
 #include "cfx_model.hpp"
 #include "cfx_game_object.hpp"
@@ -16,7 +17,7 @@ namespace cfx{
         ~CFXRenderSystem();
         CFXRenderSystem(const CFXRenderSystem &) = delete;
         CFXRenderSystem &operator=(const CFXRenderSystem &) = delete;
-        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<CFXGameObject> &gameObjects,uint32_t deviceMask);
+        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<CFXGameObject> &gameObjects,uint32_t deviceMask, const CFXCamera camera);
         
 
 
