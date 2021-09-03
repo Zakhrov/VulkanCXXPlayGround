@@ -41,14 +41,14 @@ class CFXDevice {
   CFXDevice(CFXDevice &&) = delete;
   CFXDevice &operator=(CFXDevice &&) = delete;
 
-  std::vector<VkCommandPool> getCommandPool() { return commandPools; }
-  VkDevice device() { return device_; }
+  VkCommandPool getCommandPool(int deviceIndex) { return commandPools[deviceIndex]; }
+  VkDevice device(int deviceIndex) { return devices_[deviceIndex]; }
   std::vector<VkPhysicalDevice> getPhysicalDevices(){return physicalDevices;}
   std::vector<VkRect2D> getDeviceRects(){return deviceRects;}
   std::vector<VkSurfaceKHR> surface() { return surfaces; }
-  std::vector<VkQueue> getGraphicsQueues() { return {graphicsQueue}; }
-  std::vector<VkQueue> getPresentQueues() { return {presentQueue}; }
-  int getDevicesinDeviceGroup(){return physicalDeviceGroupProperties[0].physicalDeviceCount; }
+  std::vector<VkQueue> getGraphicsQueues() { return graphicsQueues; }
+  std::vector<VkQueue> getPresentQueues() { return presentQueues; }
+  int getDevicesinDeviceGroup(){return deviceCount; }
   VkInstance getInstance() {return instance;}
   std::string getDeviceName(int deviceIndex){
     return deviceNames[deviceIndex];
@@ -75,18 +75,18 @@ class CFXDevice {
       VkBufferUsageFlags usage,
       VkMemoryPropertyFlags properties,
       VkBuffer &buffer,
-      VkDeviceMemory &bufferMemory);
-  std::vector<VkCommandBuffer> beginSingleTimeCommands();
-  void endSingleTimeCommands(VkCommandBuffer commandBuffers);
-  void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+      VkDeviceMemory &bufferMemory,int deviceIndex);
+  VkCommandBuffer beginSingleTimeCommands(int deviceIndex);
+  void endSingleTimeCommands(VkCommandBuffer commandBuffer,int deviceIndex);
+  void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, int deviceIndex);
   void copyBufferToImage(
-      VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
+      VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount,int deviceIndex);
 
   void createImageWithInfo(
       const VkImageCreateInfo &imageInfo,
       VkMemoryPropertyFlags properties,
       VkImage &image,
-      VkDeviceMemory &imageMemory);
+      VkDeviceMemory &imageMemory, int deviceIndex);
 
   std::vector<VkPhysicalDeviceProperties> properties;
 
@@ -96,7 +96,7 @@ class CFXDevice {
   void createSurface();
   void createDeviceGroups();
   void createLogicalDevice();
-  void createCommandPool();
+  void createCommandPool(int deviceIndex);
 
   
   std::vector<const char *> getRequiredExtensions();
@@ -115,15 +115,16 @@ class CFXDevice {
   uint32_t deviceGroupCount = 0;
   std::vector<VkPhysicalDeviceGroupProperties> physicalDeviceGroupProperties;
 
-  VkDevice device_;
+  std::vector<VkDevice> devices_;
   std::vector<VkSurfaceKHR> surfaces;
+  uint32_t deviceCount = 0;
   
   std::vector<VkQueue> graphicsQueues;
   std::vector<VkQueue> presentQueues;
   std::vector<VkQueue> transferQueues;
-  VkQueue graphicsQueue;
-  VkQueue presentQueue;
-  VkQueue transferQueue;
+  // VkQueue graphicsQueue;
+  // VkQueue presentQueue;
+  // VkQueue transferQueue;
   std::vector<VkRect2D> deviceRects;
   std::vector<uint32_t> deviceIds;
   std::vector<std::string> deviceNames;

@@ -27,26 +27,27 @@ namespace cfx{
         RenderBuffer beginFrame();
         void endFrame();
         bool isFrameInProgress() const {return isFrameStarted;}
-        VkCommandBuffer getCurrentCommandBuffer() const{ 
+        VkCommandBuffer getCurrentCommandBuffer(int deviceIndex) const{ 
+            
             assert( isFrameStarted && "Cannot get Command Buffer if frame is not in progress");
-            return commandBuffers[currentFrameIndex];
+            return commandBuffers[deviceIndex][currentFrameIndex];
             }
         int getFrameIndex() const {
             assert( isFrameStarted && "Cannot get Frame Index if frame is not in progress");
             return currentFrameIndex;
 
         }
-        VkRenderPass getSwapChainRenderPass() const {return cfxSwapChain->getRenderPass();}
+        std::vector<VkRenderPass> getSwapChainRenderPasses() const {return cfxSwapChain->getRenderPasses();}
         void beginSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask,uint32_t deviceIndex);
-        void endSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask);
+        void endSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask,int deviceIndex);
         float getAspectRatio() const {return cfxSwapChain->extentAspectRatio(); }
         
 
 
         private:
       
-        void createCommandBuffers();
-        void freeCommandBuffers();
+        void createCommandBuffers(int deviceIndex);
+        void freeCommandBuffers(int deviceIndex);
         void recreateSwapChain();
         
         
@@ -57,11 +58,12 @@ namespace cfx{
         // CFXSwapChain cfxSwapChain{cfxDevice,window.getExtent()};
         std::unique_ptr<CFXSwapChain> cfxSwapChain;
         // CFXPipeLine cfxPipeLine{cfxDevice,CFXPipeLine::defaultPipelineConfigInfo(WIDTH,HEIGHT),"shaders/simple_shader.vert.spv","shaders/simple_shader.frag.spv"};
-        std::vector<VkCommandBuffer> commandBuffers;
+        std::vector<std::vector<VkCommandBuffer>> commandBuffers;
         uint32_t currentImageIndex;
         int currentFrameIndex{0};
         bool isFrameStarted = false;
-        uint32_t deviceIndex = 1;
+        uint32_t deviceIndex = 0;
+        int deviceCount = 0;
         
         
     };

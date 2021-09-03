@@ -31,7 +31,7 @@ namespace cfx{
     }
     void App::run(){
       std::cout << "CREATE RENDER SYSTEM"<< std::endl;
-        CFXRenderSystem cfxRenderSystem{cfxDevice,cfxRenderer.getSwapChainRenderPass()};
+        CFXRenderSystem cfxRenderSystem{cfxDevice,cfxRenderer.getSwapChainRenderPasses()};
         CFXCamera camera{};
         // camera.setViewDirection(glm::vec3(0.f),glm::vec3(0.5f,0.f,1.f));
         // camera.setViewTarget(glm::vec3(-1.f,-2.f,2.f),glm::vec3(0.f,0.f,2.5f));
@@ -59,7 +59,7 @@ namespace cfx{
           if(renderBuffer.commandBuffer != nullptr){
             cfxRenderer.beginSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
             cfxRenderSystem.renderGameObjects(renderBuffer.commandBuffer,cfxGameObjects,renderBuffer.deviceMask,camera);
-            cfxRenderer.endSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask);
+            cfxRenderer.endSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
             cfxRenderer.endFrame();
           }
            
@@ -67,7 +67,12 @@ namespace cfx{
             
         }
 
-        vkDeviceWaitIdle(cfxDevice.device());
+        for(int i=0; i < cfxDevice.getDevicesinDeviceGroup(); i++){
+          vkDeviceWaitIdle(cfxDevice.device(i));
+
+        }
+
+        
     }
     // temporary helper function, creates a 1x1x1 cube centered at offset
 // std::unique_ptr<CFXModel> createCubeModel(CFXDevice& device, glm::vec3 offset) {

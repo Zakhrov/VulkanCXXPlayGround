@@ -38,20 +38,22 @@ namespace cfx {
 
         static std::unique_ptr<CFXModel> createModelFromFile(CFXDevice &device,const std::string &filepath);
 
-        void bind(VkCommandBuffer commandBuffer);
-        void draw(VkCommandBuffer commandBuffer);
+        void bind(VkCommandBuffer commandBuffer,int deviceIndex);
+        void draw(VkCommandBuffer commandBuffer,int deviceIndex);
         private:
-        void createVertexBuffers(const std::vector<Vertex> &vertices);
-        void createIndexBuffers(const std::vector<uint32_t> &indices);
+        void createVertexBuffers(const std::vector<Vertex> &vertices, int deviceIndex);
+        void createIndexBuffers(const std::vector<uint32_t> &indices,int deviceIndex);
         CFXDevice& cfxDevice;
-        VkBuffer vertexBuffer;
-        VkDeviceMemory vertexBufferMemory;
+        std::vector<VkBuffer> vertexBuffers;
+        std::vector<VkBuffer> vertexBuffersBound;
+        std::vector<VkDeviceMemory> vertexBufferMemories;
         uint32_t vertexCount;
 
-        bool hasIndexBuffer = false;
+        std::vector<bool> hasIndexBuffer{};
 
-        VkBuffer indexBuffer;
-        VkDeviceMemory indexBufferMemory;
+        std::vector<VkBuffer> indexBuffers;
+        std::vector<VkBuffer> indexBuffersBound;
+        std::vector<VkDeviceMemory> indexBufferMemories;
         uint32_t indexCount;
         
 

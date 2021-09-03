@@ -19,26 +19,28 @@ namespace cfx {
   VkPipelineLayout pipelineLayout = nullptr;
   VkRenderPass renderPass = nullptr;
   uint32_t subpass = 0;
+  uint32_t deviceIndex = 0;
     };
     class CFXPipeLine {
         public:
-        CFXPipeLine(CFXDevice& device, const PipelineConfigInfo& configInfo, const std::string& vertFilePath, const std::string& fragFilePath);
+        CFXPipeLine(CFXDevice& device, const PipelineConfigInfo& configInfo, const std::string& vertFilePath, const std::string& fragFilePath,int deviceIndex);
         ~CFXPipeLine();
         CFXPipeLine(const CFXPipeLine&) = delete;
         void operator=(const CFXPipeLine&) = delete;
 
-        static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
+        static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo,int deviceIndex);
 
         void bind(VkCommandBuffer commandBuffer);
 
         private:
         static std::vector<char> readFile(const std::string& filepath);
 
-        void createGraphicsPipeLine(const PipelineConfigInfo& configInfo,const std::string& vertFilePath, const std::string& fragFilePath);
-        void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule);
+        void createGraphicsPipeLine(const PipelineConfigInfo& configInfo,const std::string& vertFilePath, const std::string& fragFilePath,int deviceIndex);
+        void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule,int deviceIndex);
         CFXDevice& cfxDevice;
-        VkPipeline graphicsPipeline;
+        VkPipeline graphicsPipeline{};
         VkShaderModule vertShaderModule;
         VkShaderModule fragShaderModule;
+        int deviceIndex;
     };
 }

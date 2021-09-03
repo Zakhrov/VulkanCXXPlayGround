@@ -21,7 +21,8 @@ namespace cfx{
   void operator=(const CFXSwapChain &) = delete;
 
   VkFramebuffer getFrameBuffer(int deviceIndex,int index) { return swapChainFramebuffers[deviceIndex][index]; }
-  VkRenderPass getRenderPass() { return renderPass; }
+  VkRenderPass getRenderPass(int deviceIndex) { return renderPasses[deviceIndex]; }
+  std::vector<VkRenderPass> getRenderPasses() { return renderPasses; }
   VkImageView getImageView(int deviceIndex,int index) { return swapChainImageViews[deviceIndex][index]; }
   size_t imageCount(int deviceIndex) { return swapChainImages[deviceIndex].size(); }
   VkFormat getSwapChainImageFormat() { return swapChainImageFormat; }
@@ -61,7 +62,7 @@ namespace cfx{
   VkExtent2D swapChainExtent;
 
   std::vector<std::vector<VkFramebuffer>> swapChainFramebuffers;
-  VkRenderPass renderPass;
+  std::vector<VkRenderPass> renderPasses{};
 
   std::vector<std::vector<VkImage>> depthImages;
   std::vector<std::vector<VkDeviceMemory>> depthImageMemorys;

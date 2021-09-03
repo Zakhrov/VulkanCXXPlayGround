@@ -13,18 +13,18 @@
 namespace cfx{
     class CFXRenderSystem{
         public:
-        CFXRenderSystem(CFXDevice &device, VkRenderPass renderPass);
+        CFXRenderSystem(CFXDevice &device, std::vector<VkRenderPass> renderPasses);
         ~CFXRenderSystem();
         CFXRenderSystem(const CFXRenderSystem &) = delete;
         CFXRenderSystem &operator=(const CFXRenderSystem &) = delete;
-        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<CFXGameObject> &gameObjects,uint32_t deviceMask, const CFXCamera camera);
+        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<CFXGameObject> &gameObjects,uint32_t deviceIndex, const CFXCamera camera);
         
 
 
         private:
         
-        void createPipelineLayout();
-        void createPipeline(VkRenderPass renderpass);
+        void createPipelineLayout(int deviceIndex);
+        void createPipeline(VkRenderPass renderpass, int deviceIndex);
         
         
         
@@ -36,8 +36,8 @@ namespace cfx{
         CFXDevice& cfxDevice;
         // CFXSwapChain cfxSwapChain{cfxDevice,window.getExtent()};
         
-        std::unique_ptr<CFXPipeLine> cfxPipeLine;
-        VkPipelineLayout pipelineLayout;
+        std::vector<CFXPipeLine*> cfxPipeLines;
+        std::vector<VkPipelineLayout> pipelineLayouts{};
         std::vector<VkCommandBuffer> commandBuffers;
         
         
