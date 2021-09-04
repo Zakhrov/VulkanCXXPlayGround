@@ -135,6 +135,7 @@ namespace cfx{
     }
 
     void CFXModel::bind(VkCommandBuffer commandBuffer,int deviceIndex){
+        std::cout << "BIND OBJECT TO COMMAND BUFFER "<< deviceIndex <<std::endl;
         
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffer,0,1,&vertexBuffers[deviceIndex],offsets);
@@ -142,6 +143,7 @@ namespace cfx{
         if(hasIndexBuffer[deviceIndex]){
             vkCmdBindIndexBuffer(commandBuffer,indexBuffers[deviceIndex],0,VK_INDEX_TYPE_UINT32);
         }
+        std::cout << "BIND OBJECT TO COMMAND BUFFER END"<< deviceIndex <<std::endl;
         
     }
 

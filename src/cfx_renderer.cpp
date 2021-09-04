@@ -76,7 +76,7 @@ namespace cfx{
   
    
     RenderBuffer Renderer::beginFrame(){
-        // std::cout << "BEGIN FRAME"<< std::endl;
+        std::cout << "BEGIN FRAME"<< std::endl;
         RenderBuffer renderBuffer{};
         VkCommandBuffer commandBuffer{};
         VkCommandBufferBeginInfo beginInfo{};
@@ -92,6 +92,7 @@ namespace cfx{
             else{
                 deviceIndex = 1;
             }
+            
             commandBuffer = getCurrentCommandBuffer(deviceIndex);
             renderBuffer.commandBuffer = commandBuffer;
             
@@ -163,14 +164,19 @@ namespace cfx{
 
     }
     void Renderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask,uint32_t deviceIndex){
+        std::cout << "RENDERPASS FOR "<< deviceIndex << std::endl;
         assert(isFrameStarted && "Cant call beginSwapChainRenderPass if frame is not in progress");
         assert(commandBuffer == getCurrentCommandBuffer(deviceIndex) && "cant begin renderpass on a command buffer from a different frame");
 
 
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        std::cout << "GETTING RENDERPASS FOR "<< deviceIndex << std::endl;
         renderPassInfo.renderPass = cfxSwapChain->getRenderPass(deviceIndex);
+        std::cout << "GOT RENDERPASS FOR "<< deviceIndex << std::endl;
+        std::cout << "GETTING FRAMEBUFFER FOR "<< deviceIndex << std::endl;
         renderPassInfo.framebuffer = cfxSwapChain->getFrameBuffer(deviceIndex,currentImageIndex);
+        std::cout << "GOT FRAMEBUFFER FOR "<< deviceIndex << std::endl;
           // renderPassInfo.pNext = &deviceGroupRenderPassInfo;
 
         renderPassInfo.renderArea.offset = {0, 0};
@@ -187,7 +193,7 @@ namespace cfx{
         
 
       vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    //   std::cout << "BEGIN RENDER PASS" << std::endl;
+      std::cout << "BEGIN RENDER PASS" << std::endl;
 
       VkViewport viewport{};
       viewport.x = 0.0f;
@@ -197,13 +203,13 @@ namespace cfx{
       viewport.minDepth = 0.0f;
       viewport.maxDepth = 1.0f;
       VkRect2D scissor{{0, 0}, cfxSwapChain->getSwapChainExtent()};
-      // std::cout << "SET VIEWPORT" << std::endl;
+      std::cout << "SET VIEWPORT" << std::endl;
       vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-      // std::cout << "VIEWPORT SET" << std::endl;
-      // std::cout << "SET SCISSOR" << std::endl;
+      std::cout << "VIEWPORT SET" << std::endl;
+      std::cout << "SET SCISSOR" << std::endl;
       vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-      // std::cout << "SCISSOR SET" << std::endl;
-      // std::cout << "RENDER GAME OBJECT" << std::endl;
+      std::cout << "SCISSOR SET" << std::endl;
+      
 
 
     }
@@ -214,7 +220,7 @@ namespace cfx{
         //       vkCmdSetDeviceMask(commandBuffer,deviceMask);
         //   }
         vkCmdEndRenderPass(commandBuffer);
-        //   std::cout << "END RENDER PASS" << std::endl;
+         std::cout << "END RENDER PASS" << std::endl;
 
     }
     

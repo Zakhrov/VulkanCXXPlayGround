@@ -43,7 +43,7 @@ namespace cfx{
     
 
     void CFXRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,std::vector<CFXGameObject> &cfxGameObjects,uint32_t deviceIndex, const CFXCamera camera){
-      // std::cout << "RENDER GAME OBJECTS"<< std::endl;
+      std::cout << "RENDER GAME OBJECTS"<< std::endl;
       cfxPipeLines[deviceIndex]->bind(commandBuffer);
       auto projectionView = camera.getProjection() * camera.getView();
 
@@ -66,7 +66,7 @@ namespace cfx{
         &push);
     obj.model->bind(commandBuffer,deviceIndex);
     obj.model->draw(commandBuffer,deviceIndex);
-    // std::cout << "RENDER GAME OBJECTS END"<< std::endl;
+    std::cout << "RENDER GAME OBJECTS END"<< std::endl;
   }
 }
     void CFXRenderSystem::createPipelineLayout(int deviceIndex){
@@ -94,7 +94,7 @@ namespace cfx{
         CFXPipeLine::defaultPipelineConfigInfo(pipelineConfig,deviceIndex);
         pipelineConfig.renderPass = renderpass;
         pipelineConfig.pipelineLayout = pipelineLayouts[deviceIndex];
-        cfxPipeLines[deviceIndex] = new CFXPipeLine(cfxDevice,pipelineConfig,
+        cfxPipeLines[deviceIndex] = std::make_unique<CFXPipeLine>(cfxDevice,pipelineConfig,
         "shaders/simple_shader.vert.spv",
         "shaders/simple_shader.frag.spv",deviceIndex);
         std::cout << "CREATE PIPELINE END "<< deviceIndex << std::endl;

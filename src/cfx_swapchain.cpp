@@ -130,6 +130,7 @@ CFXSwapChain::~CFXSwapChain() {
 }
 
 VkResult CFXSwapChain::acquireNextImage(uint32_t *imageIndex,uint32_t deviceIndex) {
+  std::cout << "ACQ NEXT IMG" << std::endl;
   // vkResetFences(device.device(deviceIndex), 1, &inFlightFences[deviceIndex][currentFrame]);
   vkWaitForFences(
       device.device(deviceIndex),
@@ -143,7 +144,7 @@ VkResult CFXSwapChain::acquireNextImage(uint32_t *imageIndex,uint32_t deviceInde
       nextImageInfo.timeout = std::numeric_limits<uint64_t>::max();
       nextImageInfo.semaphore = imageAvailableSemaphores[deviceIndex][currentFrame];
       nextImageInfo.fence = VK_NULL_HANDLE;
-      nextImageInfo.deviceMask = deviceMasks[deviceIndex];
+      // nextImageInfo.deviceMask = deviceMasks[deviceIndex];
       // return vkAcquireNextImage2KHR(device.device(deviceIndex),&nextImageInfo,imageIndex);
       VkResult result = vkAcquireNextImageKHR(
       device.device(deviceIndex),
@@ -152,6 +153,7 @@ VkResult CFXSwapChain::acquireNextImage(uint32_t *imageIndex,uint32_t deviceInde
       imageAvailableSemaphores[deviceIndex][currentFrame],  // must be a not signaled semaphore
       VK_NULL_HANDLE,
       imageIndex);
+      std::cout << " NEXT IMG ACQUIRED " << std::endl;
       return result;
       
       
@@ -166,7 +168,7 @@ VkResult CFXSwapChain::acquireNextImage(uint32_t *imageIndex,uint32_t deviceInde
 VkResult CFXSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex,uint32_t deviceIndex) {
      
  
-  // std::cout << "INSIDE SUBMIT_COMMAND_BUFFER" << std::endl;
+  std::cout << "INSIDE SUBMIT_COMMAND_BUFFER" << std::endl;
 
   
 
@@ -290,7 +292,7 @@ void CFXSwapChain::createSwapChain(uint32_t deviceIndex) {
   createInfo.imageArrayLayers = 1;
   createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-  QueueFamilyIndices indices = device.findPhysicalQueueFamilies()[deviceIndex];
+  QueueFamilyIndices indices = device.findPhysicalQueueFamilies(deviceIndex);
   uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
 
   if (indices.graphicsFamily != indices.presentFamily) {

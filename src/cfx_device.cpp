@@ -156,7 +156,7 @@ void CFXDevice::createDeviceGroups() {
       deviceIndices[i] = i;
 
       std::cout << properties[i].deviceName << std::endl;
-      std::cout << properties[i].apiVersion << std::endl;
+      std::cout << properties[i].deviceType << std::endl;
       deviceNames[i] = properties[i].deviceName;
       
       
@@ -201,9 +201,12 @@ void CFXDevice::createDeviceGroups() {
 void CFXDevice::createLogicalDevice() {
   std::cout<< "CREATING LOGICAL DEVICES " << std::endl;
   for(int i=0; i< deviceCount; i++){
+    if(properties[i].deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU){
+      
+    }
     std::cout<< "CREATING LOGICAL DEVICES " << i << std::endl;
 
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevices)[i];
+    QueueFamilyIndices indices = findQueueFamilies(physicalDevices,i);
 
   std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
   std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
@@ -269,7 +272,7 @@ void CFXDevice::createLogicalDevice() {
 
 void CFXDevice::createCommandPool(int deviceIndex) {
   std::cout << "CREATE COMMAND POOL " << deviceIndex << std::endl;
-  QueueFamilyIndices queueFamilyIndices = findPhysicalQueueFamilies()[deviceIndex];
+  QueueFamilyIndices queueFamilyIndices = findPhysicalQueueFamilies(deviceIndex);
   VkCommandPoolCreateInfo poolInfo = {};
   poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
@@ -405,35 +408,32 @@ bool CFXDevice::checkDeviceExtensionSupport(VkPhysicalDevice device) {
   return requiredExtensions.empty();
 }
 
-std::vector<QueueFamilyIndices> CFXDevice::findQueueFamilies(std::vector<VkPhysicalDevice> devices) {
+QueueFamilyIndices CFXDevice::findQueueFamilies(std::vector<VkPhysicalDevice> devices,int deviceIndex) {
   
-  std::vector<QueueFamilyIndices> indices(deviceCount);
-  for(int i = 0; i < deviceCount; i ++){
-    uint32_t queueFamilyCount = 0;
-  vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &queueFamilyCount, nullptr);
+  QueueFamilyIndices indices;
+   uint32_t queueFamilyCount = 0;
+  vkGetPhysicalDeviceQueueFamilyProperties(devices[deviceIndex], &queueFamilyCount, nullptr);
 
   std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-  vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &queueFamilyCount, queueFamilies.data());
+  vkGetPhysicalDeviceQueueFamilyProperties(devices[deviceIndex], &queueFamilyCount, queueFamilies.data());
 
   int j = 0;
   for (const auto &queueFamily : queueFamilies) {
     if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-      indices[i].graphicsFamily = j;
-      indices[i].graphicsFamilyHasValue = true;
+      indices.graphicsFamily = j;
+      indices.graphicsFamilyHasValue = true;
     }
     VkBool32 presentSupport = false;
-    vkGetPhysicalDeviceSurfaceSupportKHR(devices[i], i, surfaces[0], &presentSupport);
+    vkGetPhysicalDeviceSurfaceSupportKHR(devices[deviceIndex], j, surfaces[0], &presentSupport);
     if (queueFamily.queueCount > 0 && presentSupport) {
-      indices[i].presentFamily = j;
-      indices[i].presentFamilyHasValue = true;
+      indices.presentFamily = j;
+      indices.presentFamilyHasValue = true;
     }
-    if (indices[i].isComplete()) {
+    if (indices.isComplete()) {
       break;
     }
 
     j++;
-  }
-
   }
 
   

@@ -29,7 +29,7 @@ namespace cfx{
 
     }
     void CFXPipeLine::createGraphicsPipeLine(const PipelineConfigInfo& configInfo,const std::string& vertFilePath, const std::string& fragFilePath, int deviceIndex){
-        std::cout << "CREATING GRAPHICS PIPELINE" <<std::endl;
+        std::cout << "CREATING GRAPHICS PIPELINE " << deviceIndex << std::endl;
         assert(configInfo.pipelineLayout != VK_NULL_HANDLE && "Cannot create pipeline: no pipelineLayout provided in configInfo");
         assert(configInfo.renderPass != VK_NULL_HANDLE && "Cannot create pipeline: no renderpass provided in configInfo");
         auto vertCode = readFile(vertFilePath);
@@ -93,7 +93,9 @@ namespace cfx{
 
     }
     void CFXPipeLine::bind(VkCommandBuffer commandBuffer){
+        std::cout << "BIND GRAPHICS PIPLELINE TO COMMAND BUFFER" <<std::endl;
         vkCmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipeline);
+        std::cout << "BIND GRAPHICS PIPLELINE TO COMMAND BUFFER END" <<std::endl;
     }
 
     void CFXPipeLine::createShaderModule(const std::vector<char>& code, VkShaderModule * shaderModule,int deviceIndex){

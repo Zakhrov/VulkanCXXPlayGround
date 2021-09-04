@@ -61,16 +61,17 @@ namespace cfx{
             cfxRenderSystem.renderGameObjects(renderBuffer.commandBuffer,cfxGameObjects,renderBuffer.deviceMask,camera);
             cfxRenderer.endSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
             cfxRenderer.endFrame();
+            vkDeviceWaitIdle(cfxDevice.device(renderBuffer.deviceIndex));
           }
            
             
             
         }
 
-        for(int i=0; i < cfxDevice.getDevicesinDeviceGroup(); i++){
-          vkDeviceWaitIdle(cfxDevice.device(i));
+        // for(int i=0; i < cfxDevice.getDevicesinDeviceGroup(); i++){
+          
 
-        }
+        // }
 
         
     }

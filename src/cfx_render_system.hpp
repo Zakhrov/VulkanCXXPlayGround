@@ -36,7 +36,7 @@ namespace cfx{
         CFXDevice& cfxDevice;
         // CFXSwapChain cfxSwapChain{cfxDevice,window.getExtent()};
         
-        std::vector<CFXPipeLine*> cfxPipeLines;
+        std::vector<std::unique_ptr<CFXPipeLine>> cfxPipeLines;
         std::vector<VkPipelineLayout> pipelineLayouts{};
         std::vector<VkCommandBuffer> commandBuffers;
         

@@ -65,7 +65,7 @@ class CFXDevice {
 
   std::vector<SwapChainSupportDetails> getSwapChainSupport() { return querySwapChainSupport(physicalDevices); }
   uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties,int deviceIndex);
-  std::vector<QueueFamilyIndices> findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevices); }
+  QueueFamilyIndices findPhysicalQueueFamilies(int deviceIndex) { return findQueueFamilies(physicalDevices,deviceIndex); }
   VkFormat findSupportedFormat(
       const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
@@ -101,7 +101,7 @@ class CFXDevice {
   
   std::vector<const char *> getRequiredExtensions();
   bool checkValidationLayerSupport();
-  std::vector<QueueFamilyIndices> findQueueFamilies(std::vector<VkPhysicalDevice> devices);
+  QueueFamilyIndices findQueueFamilies(std::vector<VkPhysicalDevice> devices,int deviceIndex);
   void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
   void hasGflwRequiredInstanceExtensions();
   bool checkDeviceExtensionSupport(VkPhysicalDevice device);
