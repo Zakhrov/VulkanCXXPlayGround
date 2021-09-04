@@ -5,14 +5,14 @@
 #include <cassert>
 namespace cfx{
     CFXPipeLine::CFXPipeLine(CFXDevice& device, const PipelineConfigInfo& configInfo, const std::string& vertFilePath, const std::string& fragFilePath,int deviceIndex):cfxDevice{device},deviceIndex{deviceIndex}{
-            std::cout << "CREATING PIPELINE OBJECT" <<std::endl;
+            // std::cout << "CREATING PIPELINE OBJECT" <<std::endl;
             createGraphicsPipeLine(configInfo,vertFilePath,fragFilePath,deviceIndex);
 
     }
     CFXPipeLine::~CFXPipeLine(){
-       vkDestroyShaderModule(cfxDevice.device(deviceIndex),vertShaderModule,nullptr);
-        vkDestroyShaderModule(cfxDevice.device(deviceIndex),fragShaderModule,nullptr);
-        vkDestroyPipeline(cfxDevice.device(deviceIndex),graphicsPipeline,nullptr);
+    //    vkDestroyShaderModule(cfxDevice.device(deviceIndex),vertShaderModule,nullptr);
+    //     vkDestroyShaderModule(cfxDevice.device(deviceIndex),fragShaderModule,nullptr);
+    //     vkDestroyPipeline(cfxDevice.device(deviceIndex),graphicsPipeline,nullptr);
     }
     std::vector<char> CFXPipeLine::readFile(const std::string& filepath){
         std::ifstream file{filepath, std::ios::ate | std::ios::binary};
@@ -29,7 +29,7 @@ namespace cfx{
 
     }
     void CFXPipeLine::createGraphicsPipeLine(const PipelineConfigInfo& configInfo,const std::string& vertFilePath, const std::string& fragFilePath, int deviceIndex){
-        std::cout << "CREATING GRAPHICS PIPELINE " << deviceIndex << std::endl;
+        // std::cout << "CREATING GRAPHICS PIPELINE " << deviceIndex << std::endl;
         assert(configInfo.pipelineLayout != VK_NULL_HANDLE && "Cannot create pipeline: no pipelineLayout provided in configInfo");
         assert(configInfo.renderPass != VK_NULL_HANDLE && "Cannot create pipeline: no renderpass provided in configInfo");
         auto vertCode = readFile(vertFilePath);
@@ -93,9 +93,10 @@ namespace cfx{
 
     }
     void CFXPipeLine::bind(VkCommandBuffer commandBuffer){
-        std::cout << "BIND GRAPHICS PIPLELINE TO COMMAND BUFFER" <<std::endl;
+        // std::cout << "BIND GRAPHICS PIPLELINE TO COMMAND BUFFER" <<std::endl;
+        
         vkCmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipeline);
-        std::cout << "BIND GRAPHICS PIPLELINE TO COMMAND BUFFER END" <<std::endl;
+        // std::cout << "BIND GRAPHICS PIPLELINE TO COMMAND BUFFER END" <<std::endl;
     }
 
     void CFXPipeLine::createShaderModule(const std::vector<char>& code, VkShaderModule * shaderModule,int deviceIndex){
@@ -109,8 +110,8 @@ namespace cfx{
         }
 
     }
-    void CFXPipeLine::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo,int deviceIndex){
-        std::cout << "CREATING PIPELINE CONFIG INFO" <<std::endl;
+    void CFXPipeLine::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo){
+        // std::cout << "CREATING PIPELINE CONFIG INFO" <<std::endl;
         
         configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -180,6 +181,5 @@ namespace cfx{
   configInfo.dynamicStateInfo.dynamicStateCount =
       static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
   configInfo.dynamicStateInfo.flags = 0;
-  configInfo.deviceIndex = deviceIndex;
     }
 }

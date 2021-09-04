@@ -45,9 +45,9 @@ class CFXDevice {
   VkDevice device(int deviceIndex) { return devices_[deviceIndex]; }
   std::vector<VkPhysicalDevice> getPhysicalDevices(){return physicalDevices;}
   std::vector<VkRect2D> getDeviceRects(){return deviceRects;}
-  std::vector<VkSurfaceKHR> surface() { return surfaces; }
-  std::vector<VkQueue> getGraphicsQueues() { return graphicsQueues; }
-  std::vector<VkQueue> getPresentQueues() { return presentQueues; }
+  VkSurfaceKHR surface() { return surface_; }
+  VkQueue getGraphicsQueues(int deviceIndex) { return graphicsQueues[deviceIndex]; }
+  VkQueue getPresentQueues(int deviceIndex) { return presentQueues[deviceIndex]; }
   int getDevicesinDeviceGroup(){return deviceCount; }
   VkInstance getInstance() {return instance;}
   std::string getDeviceName(int deviceIndex){
@@ -63,7 +63,7 @@ class CFXDevice {
     return deviceMasks;
   }
 
-  std::vector<SwapChainSupportDetails> getSwapChainSupport() { return querySwapChainSupport(physicalDevices); }
+  SwapChainSupportDetails getSwapChainSupport(int deviceIndex) { return querySwapChainSupport(physicalDevices[deviceIndex]); }
   uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties,int deviceIndex);
   QueueFamilyIndices findPhysicalQueueFamilies(int deviceIndex) { return findQueueFamilies(physicalDevices,deviceIndex); }
   VkFormat findSupportedFormat(
@@ -105,7 +105,7 @@ class CFXDevice {
   void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
   void hasGflwRequiredInstanceExtensions();
   bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-  std::vector<SwapChainSupportDetails> querySwapChainSupport(std::vector<VkPhysicalDevice> devices);
+  SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
   VkInstance instance;
   VkDebugUtilsMessengerEXT debugMessenger;
@@ -116,7 +116,7 @@ class CFXDevice {
   std::vector<VkPhysicalDeviceGroupProperties> physicalDeviceGroupProperties;
 
   std::vector<VkDevice> devices_;
-  std::vector<VkSurfaceKHR> surfaces;
+  VkSurfaceKHR surface_;
   uint32_t deviceCount = 0;
   
   std::vector<VkQueue> graphicsQueues;

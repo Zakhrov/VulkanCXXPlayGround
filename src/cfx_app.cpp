@@ -30,7 +30,7 @@ namespace cfx{
        
     }
     void App::run(){
-      std::cout << "CREATE RENDER SYSTEM"<< std::endl;
+      // std::cout << "CREATE RENDER SYSTEM"<< std::endl;
         CFXRenderSystem cfxRenderSystem{cfxDevice,cfxRenderer.getSwapChainRenderPasses()};
         CFXCamera camera{};
         // camera.setViewDirection(glm::vec3(0.f),glm::vec3(0.5f,0.f,1.f));
@@ -39,7 +39,7 @@ namespace cfx{
         auto viewerObject = CFXGameObject::createGameObject();
         KeyboardMovementController cameraController{};
         
-        std::cout << "CREATED RENDER SYSTEM"<< std::endl;
+        // std::cout << "CREATED RENDER SYSTEM"<< std::endl;
         auto currentTime = std::chrono::high_resolution_clock::now();
         while(!window.shouldClose()){
           
@@ -58,9 +58,9 @@ namespace cfx{
           auto renderBuffer = cfxRenderer.beginFrame();
           if(renderBuffer.commandBuffer != nullptr){
             cfxRenderer.beginSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
-            cfxRenderSystem.renderGameObjects(renderBuffer.commandBuffer,cfxGameObjects,renderBuffer.deviceMask,camera);
+            cfxRenderSystem.renderGameObjects(renderBuffer.commandBuffer,cfxGameObjects,renderBuffer.deviceIndex,camera);
             cfxRenderer.endSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
-            cfxRenderer.endFrame();
+            cfxRenderer.endFrame(renderBuffer.deviceIndex);
             vkDeviceWaitIdle(cfxDevice.device(renderBuffer.deviceIndex));
           }
            
@@ -130,7 +130,7 @@ namespace cfx{
 
 
     void App::loadGameObjects(){
-        std::cout << "LOAD MODELS" << std::endl;
+        // std::cout << "LOAD MODELS" << std::endl;
         // std::vector<CFXModel::Vertex> vertices {
         //     {{0.0f,-0.5f},{1.0f,0.0f,0.0f}},
         //     {{0.5f,0.5f},{.0f,1.0f,0.0f}},

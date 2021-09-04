@@ -29,28 +29,24 @@ namespace std{
 namespace cfx{
     CFXModel::CFXModel(CFXDevice& device,const CFXModel::Builder &builder): cfxDevice{device}
     {
-        vertexBuffers.resize(cfxDevice.getDevicesinDeviceGroup());
-        indexBuffers.resize(cfxDevice.getDevicesinDeviceGroup());
-        vertexBuffersBound.resize(cfxDevice.getDevicesinDeviceGroup());
-        indexBuffersBound.resize(cfxDevice.getDevicesinDeviceGroup());
-        vertexBufferMemories.resize(cfxDevice.getDevicesinDeviceGroup());
-        indexBufferMemories.resize(cfxDevice.getDevicesinDeviceGroup());
-        hasIndexBuffer.resize(cfxDevice.getDevicesinDeviceGroup());
-        for(int i=0; i < cfxDevice.getDevicesinDeviceGroup(); i++){
-            hasIndexBuffer[i] = false;
+        vertexBuffer.resize(cfxDevice.getDevicesinDeviceGroup());
+        vertexBufferMemory.resize(cfxDevice.getDevicesinDeviceGroup());
+        indexBuffer.resize(cfxDevice.getDevicesinDeviceGroup());
+        indexBufferMemory.resize(cfxDevice.getDevicesinDeviceGroup());
+        for(int i = 0; i < cfxDevice.getDevicesinDeviceGroup();i++){
             createVertexBuffers(builder.vertices,i);
-            createIndexBuffers(builder.indices,i);
+        createIndexBuffers(builder.indices,i);
         }
 
     }
     CFXModel::~CFXModel(){
         for(int i=0; i <cfxDevice.getDevicesinDeviceGroup(); i++){
-            vkDestroyBuffer(cfxDevice.device(i),vertexBuffers[i],nullptr);
-        vkFreeMemory(cfxDevice.device(i),vertexBufferMemories[i],nullptr);
+            vkDestroyBuffer(cfxDevice.device(i),vertexBuffer[i],nullptr);
+        vkFreeMemory(cfxDevice.device(i),vertexBufferMemory[i],nullptr);
 
-        if(hasIndexBuffer[i]){
-            vkDestroyBuffer(cfxDevice.device(i),indexBuffers[i],nullptr);
-        vkFreeMemory(cfxDevice.device(i),indexBufferMemories[i],nullptr);
+        if(hasIndexBuffer){
+            vkDestroyBuffer(cfxDevice.device(i),indexBuffer[i],nullptr);
+        vkFreeMemory(cfxDevice.device(i),indexBufferMemory[i],nullptr);
         }
             
         }
@@ -61,7 +57,7 @@ namespace cfx{
     std::unique_ptr<CFXModel> CFXModel::createModelFromFile(CFXDevice &device,const std::string &filepath){
         Builder builder{};
         builder.loadModel(filepath);
-        std::cout << "Vertex Count "<< builder.vertices.size() << std::endl;
+        // std::cout << "Vertex Count "<< builder.vertices.size() << std::endl;
         return std::make_unique<CFXModel>(device,builder);
     }
     void CFXModel::createVertexBuffers(const std::vector<Vertex> &vertices,int deviceIndex){
@@ -82,10 +78,10 @@ namespace cfx{
         cfxDevice.createBuffer(bufferSize,
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        vertexBuffers[deviceIndex],
-        vertexBufferMemories[deviceIndex],deviceIndex);
+        vertexBuffer[deviceIndex],
+        vertexBufferMemory[deviceIndex],deviceIndex);
 
-        cfxDevice.copyBuffer(stagingBuffer,vertexBuffers[deviceIndex],bufferSize,deviceIndex);
+        cfxDevice.copyBuffer(stagingBuffer,vertexBuffer[deviceIndex],bufferSize,deviceIndex);
         vkDestroyBuffer(cfxDevice.device(deviceIndex),stagingBuffer,nullptr);
         vkFreeMemory(cfxDevice.device(deviceIndex),stagingBufferMemory,nullptr);
 
@@ -95,8 +91,8 @@ namespace cfx{
 
      void CFXModel::createIndexBuffers(const std::vector<uint32_t> &indices, int deviceIndex){
          indexCount = static_cast<uint32_t>(indices.size());
-        hasIndexBuffer[deviceIndex] = indexCount > 0;
-        if(!hasIndexBuffer[deviceIndex]){
+        hasIndexBuffer = indexCount > 0;
+        if(!hasIndexBuffer){
             return;
         }
         VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
@@ -115,18 +111,18 @@ namespace cfx{
          cfxDevice.createBuffer(bufferSize,
         VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        indexBuffers[deviceIndex],
-        indexBufferMemories[deviceIndex],deviceIndex);
+        indexBuffer[deviceIndex],
+        indexBufferMemory[deviceIndex],deviceIndex);
 
-        cfxDevice.copyBuffer(stagingBuffer,indexBuffers[deviceIndex],bufferSize,deviceIndex);
+        cfxDevice.copyBuffer(stagingBuffer,indexBuffer[deviceIndex],bufferSize,deviceIndex);
         vkDestroyBuffer(cfxDevice.device(deviceIndex),stagingBuffer,nullptr);
         vkFreeMemory(cfxDevice.device(deviceIndex),stagingBufferMemory,nullptr);
         
 
 
     }
-    void CFXModel::draw(VkCommandBuffer commandBuffer,int deviceIndex){
-        if(hasIndexBuffer[deviceIndex]){
+    void CFXModel::draw(VkCommandBuffer commandBuffer){
+        if(hasIndexBuffer){
             vkCmdDrawIndexed(commandBuffer,indexCount,1,0,0,0);
         }else{
             vkCmdDraw(commandBuffer,vertexCount,1,0,0);
@@ -135,15 +131,15 @@ namespace cfx{
     }
 
     void CFXModel::bind(VkCommandBuffer commandBuffer,int deviceIndex){
-        std::cout << "BIND OBJECT TO COMMAND BUFFER "<< deviceIndex <<std::endl;
+        // std::cout << "BIND OBJECT TO COMMAND BUFFER " <<std::endl;
         
         VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffer,0,1,&vertexBuffers[deviceIndex],offsets);
+        vkCmdBindVertexBuffers(commandBuffer,0,1,&vertexBuffer[deviceIndex],offsets);
 
-        if(hasIndexBuffer[deviceIndex]){
-            vkCmdBindIndexBuffer(commandBuffer,indexBuffers[deviceIndex],0,VK_INDEX_TYPE_UINT32);
+        if(hasIndexBuffer){
+            vkCmdBindIndexBuffer(commandBuffer,indexBuffer[deviceIndex],0,VK_INDEX_TYPE_UINT32);
         }
-        std::cout << "BIND OBJECT TO COMMAND BUFFER END"<< deviceIndex <<std::endl;
+        // std::cout << "BIND OBJECT TO COMMAND BUFFER END" <<std::endl;
         
     }
 

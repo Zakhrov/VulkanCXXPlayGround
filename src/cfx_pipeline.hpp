@@ -28,7 +28,7 @@ namespace cfx {
         CFXPipeLine(const CFXPipeLine&) = delete;
         void operator=(const CFXPipeLine&) = delete;
 
-        static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo,int deviceIndex);
+        static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
 
         void bind(VkCommandBuffer commandBuffer);
 

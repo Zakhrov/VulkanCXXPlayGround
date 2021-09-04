@@ -18,18 +18,12 @@ namespace cfx{
 
 
   };
-    CFXRenderSystem::CFXRenderSystem(CFXDevice& device,std::vector<VkRenderPass> renderpasses): cfxDevice{device} {
-        pipelineLayouts.resize(cfxDevice.getDevicesinDeviceGroup());
+    CFXRenderSystem::CFXRenderSystem(CFXDevice& device,std::vector<VkRenderPass> renderPasses): cfxDevice{device} {
+        pipelineLayout.resize(cfxDevice.getDevicesinDeviceGroup());
         cfxPipeLines.resize(cfxDevice.getDevicesinDeviceGroup());
-        for(int i = 0; i < cfxDevice.getDevicesinDeviceGroup(); i++){
-          createPipelineLayout(i);
-          if(renderpasses[i] != nullptr){
-            createPipeline(renderpasses[i],i);
-            
-          }else{
-            std::cout << "RENDERPASS " << i << " IS NULL" << std::endl;
-          }
-          
+        for(int deviceIndex = 0; deviceIndex < cfxDevice.getDevicesinDeviceGroup(); deviceIndex++ ){
+          createPipelineLayout(deviceIndex);
+        createPipeline(renderPasses[deviceIndex],deviceIndex);
         }
         
         
@@ -37,13 +31,15 @@ namespace cfx{
     }
     CFXRenderSystem::~CFXRenderSystem(){
         for(int i = 0; i < cfxDevice.getDevicesinDeviceGroup(); i++){
-          vkDestroyPipelineLayout(cfxDevice.device(i),pipelineLayouts[i],nullptr);
+          vkDestroyPipelineLayout(cfxDevice.device(i),pipelineLayout[i],nullptr);
+          
         }
+        
     }
     
 
-    void CFXRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,std::vector<CFXGameObject> &cfxGameObjects,uint32_t deviceIndex, const CFXCamera camera){
-      std::cout << "RENDER GAME OBJECTS"<< std::endl;
+    void CFXRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,std::vector<CFXGameObject> &cfxGameObjects,int deviceIndex, const CFXCamera camera){
+      // std::cout << "RENDER GAME OBJECTS ON " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
       cfxPipeLines[deviceIndex]->bind(commandBuffer);
       auto projectionView = camera.getProjection() * camera.getView();
 
@@ -59,14 +55,14 @@ namespace cfx{
 
     vkCmdPushConstants(
         commandBuffer,
-        pipelineLayouts[deviceIndex],
+        pipelineLayout[deviceIndex],
         VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
         0,
         sizeof(SimplePushConstantData),
         &push);
     obj.model->bind(commandBuffer,deviceIndex);
-    obj.model->draw(commandBuffer,deviceIndex);
-    std::cout << "RENDER GAME OBJECTS END"<< std::endl;
+    obj.model->draw(commandBuffer);
+    // std::cout << "RENDER GAME OBJECTS END ON " << std::endl;
   }
 }
     void CFXRenderSystem::createPipelineLayout(int deviceIndex){
@@ -74,7 +70,7 @@ namespace cfx{
       pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       pushConstantRange.offset = 0;
       pushConstantRange.size = sizeof(SimplePushConstantData);
-        std::cout << "CREATE PIPELINE LAYOUT  " << deviceIndex << std::endl;
+        // std::cout << "CREATE PIPELINE LAYOUT  "  << std::endl;
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 0;
@@ -82,22 +78,22 @@ namespace cfx{
         pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
         pipelineLayoutInfo.pushConstantRangeCount = 1;
 
-        if(vkCreatePipelineLayout(cfxDevice.device(deviceIndex),&pipelineLayoutInfo,nullptr,&pipelineLayouts[deviceIndex]) != VK_SUCCESS){
+        if(vkCreatePipelineLayout(cfxDevice.device(deviceIndex),&pipelineLayoutInfo,nullptr,&pipelineLayout[deviceIndex]) != VK_SUCCESS){
             throw std::runtime_error("failed to create pipeline layout");
         }
       
     }
     void CFXRenderSystem::createPipeline(VkRenderPass renderpass,int deviceIndex){
       
-        std::cout << "CREATE PIPELINE "<< deviceIndex << std::endl;
+        // std::cout << "CREATE PIPELINE " << std::endl;
         PipelineConfigInfo pipelineConfig{};
-        CFXPipeLine::defaultPipelineConfigInfo(pipelineConfig,deviceIndex);
+        CFXPipeLine::defaultPipelineConfigInfo(pipelineConfig);
         pipelineConfig.renderPass = renderpass;
-        pipelineConfig.pipelineLayout = pipelineLayouts[deviceIndex];
+        pipelineConfig.pipelineLayout = pipelineLayout[deviceIndex];
         cfxPipeLines[deviceIndex] = std::make_unique<CFXPipeLine>(cfxDevice,pipelineConfig,
         "shaders/simple_shader.vert.spv",
         "shaders/simple_shader.frag.spv",deviceIndex);
-        std::cout << "CREATE PIPELINE END "<< deviceIndex << std::endl;
+        // std::cout << "CREATE PIPELINE END " << std::endl;
 
     }
   

@@ -25,7 +25,7 @@ namespace cfx{
         Renderer &operator=(const Renderer &) = delete;
 
         RenderBuffer beginFrame();
-        void endFrame();
+        void endFrame(int deviceIndex);
         bool isFrameInProgress() const {return isFrameStarted;}
         VkCommandBuffer getCurrentCommandBuffer(int deviceIndex) const{ 
             
@@ -37,6 +37,7 @@ namespace cfx{
             return currentFrameIndex;
 
         }
+        VkRenderPass getSwapChainRenderPass(int deviceIndex) const {return cfxSwapChain->getRenderPass(deviceIndex);}
         std::vector<VkRenderPass> getSwapChainRenderPasses() const {return cfxSwapChain->getRenderPasses();}
         void beginSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask,uint32_t deviceIndex);
         void endSwapChainRenderPass(VkCommandBuffer commandBuffer,uint32_t deviceMask,int deviceIndex);

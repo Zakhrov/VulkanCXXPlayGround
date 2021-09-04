@@ -62,7 +62,7 @@ CFXDevice::CFXDevice(CFXWindow &window) : window{window} {
 CFXDevice::~CFXDevice() {
   for(VkDevice device: devices_){
     for(VkCommandPool commandPool: commandPools){
-    vkDestroyCommandPool(device, commandPool, nullptr);
+    // vkDestroyCommandPool(device, commandPool, nullptr);
   }
   vkDestroyDevice(device, nullptr);
 
@@ -76,9 +76,7 @@ CFXDevice::~CFXDevice() {
     DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
   }
 
-  for(VkSurfaceKHR surface_ : surfaces){
-    vkDestroySurfaceKHR(instance, surface_, nullptr);
-  }
+  vkDestroySurfaceKHR(instance, surface_, nullptr);
   vkDestroyInstance(instance, nullptr);
 }
 
@@ -199,12 +197,10 @@ void CFXDevice::createDeviceGroups() {
 }
 
 void CFXDevice::createLogicalDevice() {
-  std::cout<< "CREATING LOGICAL DEVICES " << std::endl;
+  // std::cout<< "CREATING LOGICAL DEVICES " << std::endl;
   for(int i=0; i< deviceCount; i++){
-    if(properties[i].deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU){
-      
-    }
-    std::cout<< "CREATING LOGICAL DEVICES " << i << std::endl;
+    
+    // std::cout<< "CREATING LOGICAL DEVICES " << i << std::endl;
 
     QueueFamilyIndices indices = findQueueFamilies(physicalDevices,i);
 
@@ -251,7 +247,7 @@ void CFXDevice::createLogicalDevice() {
   vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueues[i]);
   devices_[i] = device_;
   createCommandPool(i);
-  std::cout<< "LOGICAL DEVICE CREATED " << i << std::endl;
+  // std::cout<< "LOGICAL DEVICE CREATED " << i << std::endl;
 
   }
   
@@ -271,7 +267,7 @@ void CFXDevice::createLogicalDevice() {
 }
 
 void CFXDevice::createCommandPool(int deviceIndex) {
-  std::cout << "CREATE COMMAND POOL " << deviceIndex << std::endl;
+  // std::cout << "CREATE COMMAND POOL " << deviceIndex << std::endl;
   QueueFamilyIndices queueFamilyIndices = findPhysicalQueueFamilies(deviceIndex);
   VkCommandPoolCreateInfo poolInfo = {};
   poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -289,15 +285,15 @@ void CFXDevice::createCommandPool(int deviceIndex) {
 }
 
 void CFXDevice::createSurface() {
-  std::cout << "Creating Surface" << std::endl;
+  // std::cout << "Creating Surface" << std::endl;
   // for(VkPhysicalDevice device: physicalDevices){
-    VkSurfaceKHR surface_;
+    
   //   window.createWindowSurface(instance, &surface_);
   // surfaces.push_back(surface_);
 
   // }
    window.createWindowSurface(instance, &surface_); 
-   surfaces.push_back(surface_);
+   
 
 
    
@@ -424,7 +420,7 @@ QueueFamilyIndices CFXDevice::findQueueFamilies(std::vector<VkPhysicalDevice> de
       indices.graphicsFamilyHasValue = true;
     }
     VkBool32 presentSupport = false;
-    vkGetPhysicalDeviceSurfaceSupportKHR(devices[deviceIndex], j, surfaces[0], &presentSupport);
+    vkGetPhysicalDeviceSurfaceSupportKHR(devices[deviceIndex], j, surface_, &presentSupport);
     if (queueFamily.queueCount > 0 && presentSupport) {
       indices.presentFamily = j;
       indices.presentFamilyHasValue = true;
@@ -442,34 +438,30 @@ QueueFamilyIndices CFXDevice::findQueueFamilies(std::vector<VkPhysicalDevice> de
 
 }
 
-std::vector<SwapChainSupportDetails> CFXDevice::querySwapChainSupport(std::vector<VkPhysicalDevice> devices) {
+SwapChainSupportDetails CFXDevice::querySwapChainSupport(VkPhysicalDevice device) {
   
-    std::vector<SwapChainSupportDetails> details(deviceCount);
-    for(int i = 0; i < deviceCount; i ++){
-      vkGetPhysicalDeviceSurfaceCapabilitiesKHR(devices[i], surfaces[0], &details[i].capabilities);
+    SwapChainSupportDetails details;
+       vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface_, &details.capabilities);
 
   uint32_t formatCount;
-  vkGetPhysicalDeviceSurfaceFormatsKHR(devices[i], surfaces[0], &formatCount, nullptr);
+  vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface_, &formatCount, nullptr);
 
   if (formatCount != 0) {
-    details[i].formats.resize(formatCount);
-    vkGetPhysicalDeviceSurfaceFormatsKHR(devices[i], surfaces[0], &formatCount, details[i].formats.data());
+    details.formats.resize(formatCount);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface_, &formatCount, details.formats.data());
   }
 
   uint32_t presentModeCount;
-  vkGetPhysicalDeviceSurfacePresentModesKHR(devices[i], surfaces[0], &presentModeCount, nullptr);
+  vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface_, &presentModeCount, nullptr);
 
   if (presentModeCount != 0) {
-    details[i].presentModes.resize(presentModeCount);
+    details.presentModes.resize(presentModeCount);
     vkGetPhysicalDeviceSurfacePresentModesKHR(
-        devices[i],
-        surfaces[0],
+        device,
+        surface_,
         &presentModeCount,
-        details[i].presentModes.data());
+        details.presentModes.data());
   }
-
-    }
-  
   return details;
 
 }
@@ -549,7 +541,7 @@ void CFXDevice::createBuffer(
   if(vkBindBufferMemory2(devices_[deviceIndex],1,bufferMemoryInfos.data())!=VK_SUCCESS){
     throw std::runtime_error("failed to bind Buffer memory 2 !");
   }else{
-    std::cout << "Bind Buffer MEMORY 2 succeeded" <<std::endl;
+    // std::cout << "Bind Buffer MEMORY 2 succeeded" <<std::endl;
   }
   
   
@@ -678,7 +670,7 @@ void CFXDevice::createImageWithInfo(
 
      
   
-  std::cout<< "IMAGE WITH INFO CREATED "<<std::endl;
+  // std::cout<< "IMAGE WITH INFO CREATED "<<std::endl;
   
       
   
