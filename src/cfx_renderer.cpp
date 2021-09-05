@@ -80,25 +80,16 @@ namespace cfx{
     RenderBuffer Renderer::beginFrame(){
         // std::cout << "BEGIN FRAME"<< std::endl;
         RenderBuffer renderBuffer{};
-        VkCommandBuffer commandBuffer{};
+        
         assert(!isFrameStarted && "Cant call beginFrame while frame is in progress");
             isFrameStarted = true;
         
-            
-        if(cfxDevice.getDevicesinDeviceGroup() > 1 ){
-            if(currentImageIndex % 2 == 0){
-                deviceIndex = 0;
-            }
-            else{
-                deviceIndex = 1;
-            }
-
-            
-            commandBuffer = getCurrentCommandBuffer(deviceIndex);
+            deviceIndex = currentFrameIndex % cfxDevice.getDevicesinDeviceGroup();
+            VkCommandBuffer commandBuffer = getCurrentCommandBuffer(deviceIndex);
             renderBuffer.commandBuffer = commandBuffer;
             
             renderBuffer.deviceIndex = deviceIndex;
-            // std::cout << "BEGIN FRAME FOR DEVICE " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
+            std::cout << "BEGIN FRAME FOR DEVICE " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
             auto result = cfxSwapChain->acquireNextImage(&currentImageIndex,deviceIndex);
             if(result == VK_ERROR_OUT_OF_DATE_KHR){
                 recreateSwapChain();
@@ -126,45 +117,7 @@ namespace cfx{
         //       vkCmdSetDeviceMask(commandBuffer,renderBuffer.deviceMask);
         //   }
         //   std::cout << "FRAME BEGAN" <<std::endl;
-            
-        }
-        else{
-            renderBuffer.deviceIndex = 0;
-            renderBuffer.deviceMask = 1;
-            deviceIndex = 0;
-            commandBuffer = getCurrentCommandBuffer(deviceIndex);
-            renderBuffer.commandBuffer = commandBuffer;
-            renderBuffer.deviceIndex = deviceIndex;
-            // std::cout << "BEGIN FRAME FOR DEVICE " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
-            auto result = cfxSwapChain->acquireNextImage(&currentImageIndex,deviceIndex);
-            if(result == VK_ERROR_OUT_OF_DATE_KHR){
-                recreateSwapChain();
-                renderBuffer.commandBuffer = nullptr;
-                return renderBuffer;
-            }
-
-            if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR){
-                throw std::runtime_error("failed to aquire swap chain image");
-            }
-
-            
        
-
-        // std::cout << "BEGIN COMMAND BUFFER SINGLE GPU" <<std::endl;
-
-            VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-            // std::cout << "BEGIN COMMAND BUFFER FAIL" <<std::endl;
-                    throw std::runtime_error("failed to begin recording command buffer!");
-          }
-        //   std::cout << "BEGIN COMMAND BUFFER SUCCESS" <<std::endl;
-        //   if(cfxDevice.getDevicesinDeviceGroup() > 1){
-        //       vkCmdSetDeviceMask(commandBuffer,renderBuffer.deviceMask);
-        //   }
-        //   std::cout << "FRAME BEGAN" <<std::endl;
-
-        }
         
         
         
