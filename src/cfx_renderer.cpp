@@ -89,7 +89,7 @@ namespace cfx{
             renderBuffer.commandBuffer = commandBuffer;
             
             renderBuffer.deviceIndex = deviceIndex;
-            std::cout << "BEGIN FRAME FOR DEVICE " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
+            // std::cout << "BEGIN FRAME FOR DEVICE " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
             auto result = cfxSwapChain->acquireNextImage(&currentImageIndex,deviceIndex);
             if(result == VK_ERROR_OUT_OF_DATE_KHR){
                 recreateSwapChain();

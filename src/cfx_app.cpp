@@ -63,6 +63,10 @@ namespace cfx{
             cfxRenderer.endFrame(renderBuffer.deviceIndex);
             vkDeviceWaitIdle(cfxDevice.device(renderBuffer.deviceIndex));
           }
+          auto frameTimeEnd = std::chrono::high_resolution_clock::now();
+          float renderFrameTime = std::chrono::duration<float,std::chrono::milliseconds::period>(frameTimeEnd-currentTime).count();
+          // std::cout << "FRAME TIME = "<< renderFrameTime << " ms" << std::endl;
+          std::cout << "FRAME RATE = "<< 1000 / renderFrameTime << " fps" << std::endl;
            
             
             
