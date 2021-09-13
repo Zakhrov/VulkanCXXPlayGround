@@ -41,6 +41,7 @@ namespace cfx{
         
         // std::cout << "CREATED RENDER SYSTEM"<< std::endl;
         auto currentTime = std::chrono::high_resolution_clock::now();
+        
         while(!window.shouldClose()){
           
           glfwPollEvents();
@@ -54,7 +55,7 @@ namespace cfx{
           camera.setPerspectiveProjection(glm::radians(50.f),aspect,0.1f,10.f);
           
 
-
+          auto frameTimeBegin = std::chrono::high_resolution_clock::now();
           auto renderBuffer = cfxRenderer.beginFrame();
           if(renderBuffer.commandBuffer != nullptr){
             cfxRenderer.beginSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
@@ -64,9 +65,13 @@ namespace cfx{
             vkDeviceWaitIdle(cfxDevice.device(renderBuffer.deviceIndex));
           }
           auto frameTimeEnd = std::chrono::high_resolution_clock::now();
-          float renderFrameTime = std::chrono::duration<float,std::chrono::milliseconds::period>(frameTimeEnd-currentTime).count();
+          float renderFrameTime = std::chrono::duration<float,std::chrono::nanoseconds::period>(frameTimeEnd - frameTimeBegin).count();
           // std::cout << "FRAME TIME = "<< renderFrameTime << " ms" << std::endl;
-          std::cout << "FRAME RATE = "<< 1000 / renderFrameTime << " fps" << std::endl;
+          std::string framerateString = std::to_string(1000000000 / renderFrameTime) + " fps " + std::to_string(renderFrameTime) +  " ns";
+          
+          window.setWindowName(framerateString );
+          
+          
            
             
             

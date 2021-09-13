@@ -14,6 +14,10 @@ namespace cfx{
         void createWindowSurface(VkInstance instance,VkSurfaceKHR* surface_);
         bool wasWindowResized() {return framebufferResized;}
         void restWindowResizedFlag(){framebufferResized = false;}
+        void setWindowName(std::string name){
+            windowName = name;
+            glfwSetWindowTitle(getGLFWwindow(),windowName.c_str());
+        }
         GLFWwindow *getGLFWwindow() const {return window;}
 
 
