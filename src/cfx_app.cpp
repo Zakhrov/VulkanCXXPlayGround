@@ -1,6 +1,7 @@
 #include "cfx_app.hpp"
 #include "cfx_render_system.hpp"
 #include "cfx_camera.hpp"
+#include "cfx_buffer.hpp"
 #include "keyboard_movement_controller.hpp"
 #include<stdexcept>
 #include<array>
@@ -15,12 +16,17 @@
 
 
 namespace cfx{
-  struct SimplePushConstantData{
-    glm::mat2 transform{1.f};
-    glm::vec2 offset;
-    alignas(16) glm::vec3 color;
+  struct GlobalUbo {
+    glm::mat4 projectionView{1.f};
+    glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f,-3.f,1.f});
 
   };
+  // struct SimplePushConstantData{
+  //   glm::mat2 transform{1.f};
+  //   glm::vec2 offset;
+  //   alignas(16) glm::vec3 color;
+
+  // };
     App::App(){
         loadGameObjects();
        
@@ -30,6 +36,8 @@ namespace cfx{
        
     }
     void App::run(){
+
+      
       // std::cout << "CREATE RENDER SYSTEM"<< std::endl;
         CFXRenderSystem cfxRenderSystem{cfxDevice,cfxRenderer.getSwapChainRenderPasses()};
         CFXCamera camera{};
@@ -57,7 +65,17 @@ namespace cfx{
 
           auto frameTimeBegin = std::chrono::high_resolution_clock::now();
           auto renderBuffer = cfxRenderer.beginFrame();
+          std::vector<std::unique_ptr<CFXBuffer>> uboBuffers(CFXSwapChain::MAX_FRAMES_IN_FLIGHT);
+          for(int i=0; i < uboBuffers.size(); i++){
+            uboBuffers[i] = std::make_unique<CFXBuffer>(cfxDevice,sizeof(GlobalUbo),1,VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,(int)renderBuffer.deviceIndex,cfxDevice.properties[(int)renderBuffer.deviceIndex].limits.minUniformBufferOffsetAlignment);
+            uboBuffers[i]->map();
+          }
           if(renderBuffer.commandBuffer != nullptr){
+            int frameIndex = cfxRenderer.getFrameIndex();
+            GlobalUbo globalUbo{};
+            globalUbo.projectionView = camera.getProjection() * camera.getView();
+            uboBuffers[frameIndex]->writeToBuffer(&globalUbo);
+            uboBuffers[frameIndex]->flush();
             cfxRenderer.beginSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
             cfxRenderSystem.renderGameObjects(renderBuffer.commandBuffer,cfxGameObjects,renderBuffer.deviceIndex,camera);
             cfxRenderer.endSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);

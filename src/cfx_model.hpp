@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cfx_device.hpp"
+#include "cfx_buffer.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -44,12 +45,10 @@ namespace cfx {
         void createVertexBuffers(const std::vector<Vertex> &vertices, int deviceIndex);
         void createIndexBuffers(const std::vector<uint32_t> &indices,int deviceIndex);
         CFXDevice& cfxDevice;
-        std::vector<VkBuffer> vertexBuffer;
-        std::vector<VkDeviceMemory> vertexBufferMemory;
+        std::vector<std::unique_ptr<CFXBuffer>> vertexBuffer;
         uint32_t vertexCount;
         bool hasIndexBuffer;
-        std::vector<VkBuffer> indexBuffer;
-        std::vector<VkDeviceMemory> indexBufferMemory;
+        std::vector<std::unique_ptr<CFXBuffer>> indexBuffer;
         uint32_t indexCount;
         
 
