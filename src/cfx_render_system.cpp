@@ -12,17 +12,17 @@
 
 namespace cfx{
   struct SimplePushConstantData{
-    glm::mat4 transform{1.f};
     glm::mat4 modelMatrix{1.f};
+    glm::mat4 normlaMatrix{1.f};
     // alignas(16) glm::vec3 color;
 
 
   };
-    CFXRenderSystem::CFXRenderSystem(CFXDevice& device,std::vector<VkRenderPass> renderPasses): cfxDevice{device} {
+    CFXRenderSystem::CFXRenderSystem(CFXDevice& device,std::vector<VkRenderPass> renderPasses,std::vector<std::unique_ptr<CFXDescriptorSetLayout>> &cfxSetLayouts): cfxDevice{device} {
         pipelineLayout.resize(cfxDevice.getDevicesinDeviceGroup());
         cfxPipeLines.resize(cfxDevice.getDevicesinDeviceGroup());
         for(int deviceIndex = 0; deviceIndex < cfxDevice.getDevicesinDeviceGroup(); deviceIndex++ ){
-          createPipelineLayout(deviceIndex);
+        createPipelineLayout(cfxSetLayouts[deviceIndex]->getDescriptorSetLayout(),deviceIndex);
         createPipeline(renderPasses[deviceIndex],deviceIndex);
         }
         
@@ -41,17 +41,15 @@ namespace cfx{
     void CFXRenderSystem::renderGameObjects(FrameInfo &frameInfo, std::vector<CFXGameObject> &cfxGameObjects){
       // std::cout << "RENDER GAME OBJECTS ON " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
       cfxPipeLines[frameInfo.deviceIndex]->bind(frameInfo.commandBuffer);
-      auto projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
+      vkCmdBindDescriptorSets(frameInfo.commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout[frameInfo.deviceIndex],0,1,&frameInfo.globalDescriptorSet,0,nullptr);
 
   for (auto& obj : cfxGameObjects) {
     // obj.transformComponent.rotation.y = glm::mod(obj.transformComponent.rotation.y + 0.01f, glm::two_pi<float>());
     // obj.transformComponent.rotation.x = glm::mod(obj.transformComponent.rotation.x + 0.005f, glm::two_pi<float>());
 
     SimplePushConstantData push{};
-    auto  modelMatrix = obj.transformComponent.mat4();
-
-    push.transform = projectionView * modelMatrix;
-    push.modelMatrix = modelMatrix;
+    push.modelMatrix = obj.transformComponent.mat4();
+    push.normlaMatrix = obj.transformComponent.normalMatrix();
 
     vkCmdPushConstants(
         frameInfo.commandBuffer,
@@ -65,16 +63,17 @@ namespace cfx{
     // std::cout << "RENDER GAME OBJECTS END ON " << std::endl;
   }
 }
-    void CFXRenderSystem::createPipelineLayout(int deviceIndex){
+    void CFXRenderSystem::createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout, int deviceIndex){
       VkPushConstantRange pushConstantRange{};
       pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
       pushConstantRange.offset = 0;
       pushConstantRange.size = sizeof(SimplePushConstantData);
+      std::vector<VkDescriptorSetLayout> layouts{descriptorSetLayout};
         // std::cout << "CREATE PIPELINE LAYOUT  "  << std::endl;
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 0;
-        pipelineLayoutInfo.pSetLayouts = nullptr;
+        pipelineLayoutInfo.setLayoutCount = layouts.size();
+        pipelineLayoutInfo.pSetLayouts = layouts.data();
         pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
         pipelineLayoutInfo.pushConstantRangeCount = 1;
 

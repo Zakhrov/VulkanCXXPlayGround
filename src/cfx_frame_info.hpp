@@ -11,7 +11,7 @@ namespace cfx{
         VkCommandBuffer commandBuffer;
         CFXCamera &camera;
         uint32_t deviceIndex;
-        // VkDescriptorSet &globalDescriptorSet;
+        VkDescriptorSet globalDescriptorSet;
 
     };
 }

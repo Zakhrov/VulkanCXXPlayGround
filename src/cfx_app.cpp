@@ -18,11 +18,18 @@
 namespace cfx{
   struct GlobalUbo {
     glm::mat4 projectionView{1.f};
-    glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f,-3.f,1.f});
+    glm::vec3 directionToLight = glm::normalize(glm::vec3{1.f,3.f,-1.f});
 
   };
  
     App::App(){
+        cfxDescriptorPools.resize(cfxDevice.getDevicesinDeviceGroup());
+        for(int deviceIndex=0; deviceIndex < cfxDevice.getDevicesinDeviceGroup(); deviceIndex++ ){
+          cfxDescriptorPools[deviceIndex] = CFXDescriptorPool::Builder(cfxDevice)
+          .setMaxSets(CFXSwapChain::MAX_FRAMES_IN_FLIGHT)
+          .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,CFXSwapChain::MAX_FRAMES_IN_FLIGHT)
+          .build(deviceIndex);
+        }
         loadGameObjects();
        
        
@@ -32,9 +39,38 @@ namespace cfx{
     }
     void App::run(){
 
+
+      std::vector<std::vector<std::unique_ptr<CFXBuffer>>> uboBuffers(cfxDevice.getDevicesinDeviceGroup());
+      std::vector<std::vector<VkDescriptorSet>> cfxGlobalDescriptorSets(cfxDevice.getDevicesinDeviceGroup());
+      std::vector<std::unique_ptr<CFXDescriptorSetLayout>> cfxSetLayouts(cfxDevice.getDevicesinDeviceGroup());
+      
+      for(int deviceIndex=0; deviceIndex < uboBuffers.size(); deviceIndex++){
+        std::cout<< "RESIZING UBO FOR DEVICE " << deviceIndex << std::endl;
+        uboBuffers[deviceIndex].resize(CFXSwapChain::MAX_FRAMES_IN_FLIGHT);
+        cfxGlobalDescriptorSets[deviceIndex].resize(CFXSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for(int i=0; i < uboBuffers[deviceIndex].size(); i++){
+          std::cout<< "MAPPING UBO FOR FRAME " << i << " ON DEVICE "  << deviceIndex << std::endl;
+            uboBuffers[deviceIndex][i] = std::make_unique<CFXBuffer>(cfxDevice,sizeof(GlobalUbo),1,VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,(int)deviceIndex);
+            uboBuffers[deviceIndex][i]->map();
+            std::cout<< "MAPPED UBO FOR FRAME " << i << " ON DEVICE "  << deviceIndex << std::endl;
+          }
+          cfxSetLayouts[deviceIndex] = CFXDescriptorSetLayout::Builder(cfxDevice).addBinding(0,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,VK_SHADER_STAGE_VERTEX_BIT).build(deviceIndex);
+          
+          
+          for(int i=0; i< cfxGlobalDescriptorSets[deviceIndex].size(); i++){
+
+            std::cout<< "WRITING DESCRIPTOR SET " << i << " ON DEVICE " << deviceIndex << std::endl;
+            auto bufferInfo = uboBuffers[deviceIndex][i]->descriptorInfo();
+            CFXDescriptorWriter(*cfxSetLayouts[deviceIndex],*cfxDescriptorPools[deviceIndex]).writeBuffer(0,&bufferInfo).build(cfxGlobalDescriptorSets[deviceIndex][i],deviceIndex);
+            std::cout<< "WROTE DESCRIPTOR SET " << i << " ON DEVICE " << deviceIndex << std::endl;
+          }
+          std::cout<< "FINISHED DESCRIPTOR SET ALLOCATION FOR DEVICE "  << deviceIndex << std::endl;
+      }
+          
+
       
       // std::cout << "CREATE RENDER SYSTEM"<< std::endl;
-        CFXRenderSystem cfxRenderSystem{cfxDevice,cfxRenderer.getSwapChainRenderPasses()};
+        CFXRenderSystem cfxRenderSystem{cfxDevice,cfxRenderer.getSwapChainRenderPasses(),cfxSetLayouts};
         CFXCamera camera{};
        
         auto viewerObject = CFXGameObject::createGameObject();
@@ -58,18 +94,16 @@ namespace cfx{
 
           auto frameTimeBegin = std::chrono::high_resolution_clock::now();
           auto renderBuffer = cfxRenderer.beginFrame();
-          std::vector<std::unique_ptr<CFXBuffer>> uboBuffers(CFXSwapChain::MAX_FRAMES_IN_FLIGHT);
-          for(int i=0; i < uboBuffers.size(); i++){
-            uboBuffers[i] = std::make_unique<CFXBuffer>(cfxDevice,sizeof(GlobalUbo),1,VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,(int)renderBuffer.deviceIndex,cfxDevice.properties[(int)renderBuffer.deviceIndex].limits.minUniformBufferOffsetAlignment);
-            uboBuffers[i]->map();
-          }
+          
           if(renderBuffer.commandBuffer != nullptr){
             int frameIndex = cfxRenderer.getFrameIndex();
-            FrameInfo frameInfo{frameIndex,frameTime,renderBuffer.commandBuffer,camera,renderBuffer.deviceIndex};
+            FrameInfo frameInfo{frameIndex,frameTime,renderBuffer.commandBuffer,camera,renderBuffer.deviceIndex,cfxGlobalDescriptorSets[renderBuffer.deviceIndex][frameIndex]};
             GlobalUbo globalUbo{};
             globalUbo.projectionView = camera.getProjection() * camera.getView();
-            uboBuffers[frameIndex]->writeToBuffer(&globalUbo);
-            uboBuffers[frameIndex]->flush();
+            uboBuffers[renderBuffer.deviceIndex][frameIndex]->writeToBuffer(&globalUbo);
+            uboBuffers[renderBuffer.deviceIndex][frameIndex]->flush();
+
+            
             cfxRenderer.beginSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
             cfxRenderSystem.renderGameObjects(frameInfo,cfxGameObjects);
             cfxRenderer.endSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
