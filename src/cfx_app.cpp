@@ -18,7 +18,9 @@
 namespace cfx{
   struct GlobalUbo {
     glm::mat4 projectionView{1.f};
-    glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
+    glm::vec4 ambientLightColor{1.f, 1.f ,1.f,.05f};
+    glm::vec3 lightPosition{-1.f};
+    alignas(16) glm::vec4 lightColor{1.f};
 
   };
  
@@ -72,8 +74,10 @@ namespace cfx{
       // std::cout << "CREATE RENDER SYSTEM"<< std::endl;
         CFXRenderSystem cfxRenderSystem{cfxDevice,cfxRenderer.getSwapChainRenderPasses(),cfxSetLayouts};
         CFXCamera camera{};
+        
        
         auto viewerObject = CFXGameObject::createGameObject();
+        viewerObject.transformComponent.translation.z = -2.5f;
         KeyboardMovementController cameraController{};
         
         
@@ -89,7 +93,7 @@ namespace cfx{
           camera.setViewYXZ(viewerObject.transformComponent.translation,viewerObject.transformComponent.rotation);
           float aspect = cfxRenderer.getAspectRatio();
           // camera.setOrthographicProjection(-aspect,aspect,-1,1,-1,1);
-          camera.setPerspectiveProjection(glm::radians(50.f),aspect,0.1f,10.f);
+          camera.setPerspectiveProjection(glm::radians(50.f),aspect,0.1f,100.f);
           
 
           auto frameTimeBegin = std::chrono::high_resolution_clock::now();
@@ -137,16 +141,23 @@ namespace cfx{
 
           std::shared_ptr<CFXModel> cfxModel = CFXModel::createModelFromFile(cfxDevice, "models/smooth_vase.obj");
           auto smoothVase = CFXGameObject::createGameObject();
-          smoothVase.transformComponent.translation = {-.5f,.0f,2.5f};
+          smoothVase.transformComponent.translation = {-.5f,.5f,0.f};
           smoothVase.transformComponent.scale = glm::vec3{3.f,1.5f,3.f};
           smoothVase.model = cfxModel;
           cfxGameObjects.push_back(std::move(smoothVase));
           cfxModel = CFXModel::createModelFromFile(cfxDevice, "models/flat_vase.obj");
           auto flatVase = CFXGameObject::createGameObject();
-          flatVase.transformComponent.translation = {.5f,.0f,2.5f};
+          flatVase.transformComponent.translation = {.5f,.5f,0.f};
           flatVase.transformComponent.scale = glm::vec3{3.f,1.5f,3.f};
           flatVase.model = cfxModel;
           cfxGameObjects.push_back(std::move(flatVase));
+
+          cfxModel = CFXModel::createModelFromFile(cfxDevice, "models/quad.obj");
+          auto floor = CFXGameObject::createGameObject();
+          floor.transformComponent.translation = {0.f,.5f,0.f};
+          floor.transformComponent.scale = glm::vec3{10.f,1.f,10.f};
+          floor.model = cfxModel;
+          cfxGameObjects.push_back(std::move(floor));
 
         
         

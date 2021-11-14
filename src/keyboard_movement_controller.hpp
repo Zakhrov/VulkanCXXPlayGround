@@ -22,8 +22,8 @@ namespace cfx{
         void moveInPlaneXZ(GLFWwindow *window,float dt, CFXGameObject &gameObject);
 
         KeyMappings keys{};
-        float moveSpeed{0.0003f};
-        float lookSpeed{0.0005f};
+        float moveSpeed{0.003f};
+        float lookSpeed{0.005f};
 
     };
 }
