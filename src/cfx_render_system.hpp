@@ -7,6 +7,7 @@
 
 #include "cfx_model.hpp"
 #include "cfx_game_object.hpp"
+#include "cfx_frame_info.hpp"
 #include<memory>
 #include<vector>
 #include <glm/glm.hpp>
@@ -17,7 +18,7 @@ namespace cfx{
         ~CFXRenderSystem();
         CFXRenderSystem(const CFXRenderSystem &) = delete;
         CFXRenderSystem &operator=(const CFXRenderSystem &) = delete;
-        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<CFXGameObject> &gameObjects,int deviceIndex, const CFXCamera camera);
+        void renderGameObjects(FrameInfo &frameInfo, std::vector<CFXGameObject> &cfxGameObjects);
         
 
 

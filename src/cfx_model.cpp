@@ -33,7 +33,7 @@ namespace cfx{
         indexBuffer.resize(cfxDevice.getDevicesinDeviceGroup());
         for(int i = 0; i < cfxDevice.getDevicesinDeviceGroup();i++){
             createVertexBuffers(builder.vertices,i);
-        createIndexBuffers(builder.indices,i);
+            createIndexBuffers(builder.indices,i);
         }
 
     }

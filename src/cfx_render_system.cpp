@@ -38,10 +38,10 @@ namespace cfx{
     }
     
 
-    void CFXRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,std::vector<CFXGameObject> &cfxGameObjects,int deviceIndex, const CFXCamera camera){
+    void CFXRenderSystem::renderGameObjects(FrameInfo &frameInfo, std::vector<CFXGameObject> &cfxGameObjects){
       // std::cout << "RENDER GAME OBJECTS ON " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
-      cfxPipeLines[deviceIndex]->bind(commandBuffer);
-      auto projectionView = camera.getProjection() * camera.getView();
+      cfxPipeLines[frameInfo.deviceIndex]->bind(frameInfo.commandBuffer);
+      auto projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
 
   for (auto& obj : cfxGameObjects) {
     // obj.transformComponent.rotation.y = glm::mod(obj.transformComponent.rotation.y + 0.01f, glm::two_pi<float>());
@@ -54,14 +54,14 @@ namespace cfx{
     push.modelMatrix = modelMatrix;
 
     vkCmdPushConstants(
-        commandBuffer,
-        pipelineLayout[deviceIndex],
+        frameInfo.commandBuffer,
+        pipelineLayout[frameInfo.deviceIndex],
         VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
         0,
         sizeof(SimplePushConstantData),
         &push);
-    obj.model->bind(commandBuffer,deviceIndex);
-    obj.model->draw(commandBuffer);
+    obj.model->bind(frameInfo.commandBuffer,frameInfo.deviceIndex);
+    obj.model->draw(frameInfo.commandBuffer);
     // std::cout << "RENDER GAME OBJECTS END ON " << std::endl;
   }
 }

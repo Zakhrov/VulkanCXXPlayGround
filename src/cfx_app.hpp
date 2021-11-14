@@ -5,6 +5,7 @@
 #include "cfx_renderer.hpp"
 #include "cfx_model.hpp"
 #include "cfx_game_object.hpp"
+#include "cfx_descriptors.hpp"
 #include<memory>
 #include<vector>
 #include <glm/glm.hpp>
