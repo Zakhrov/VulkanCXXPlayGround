@@ -61,7 +61,7 @@ CFXSwapChain::~CFXSwapChain() {
   
 
   for(int i=0; i < swapChainImages[deviceIndex].size();i++){
-    
+      
       vkDestroyImage(device.device(deviceIndex), swapChainImages[deviceIndex][i], nullptr);    
   }
   vkDestroySwapchainKHR(device.device(deviceIndex), swapChains[deviceIndex], nullptr);
@@ -280,7 +280,7 @@ void CFXSwapChain::createSwapChain(int deviceIndex) {
     throw std::runtime_error("failed to get swap chain images!");
   }
   swapChainImages[deviceIndex].resize(imageCount);
-  // std::cout << "CREATE SWAPCHAIN IMAGE COUNT " << imageCount <<std::endl;
+  std::cout << "CREATE SWAPCHAIN IMAGE COUNT " << imageCount <<std::endl;
   if(vkGetSwapchainImagesKHR(device.device(deviceIndex), swapChains[deviceIndex], &imageCount, swapChainImages[deviceIndex].data())!=VK_SUCCESS){
     throw std::runtime_error("failed to get swap chain images!");
   }

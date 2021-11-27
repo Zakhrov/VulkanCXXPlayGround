@@ -19,7 +19,7 @@ namespace cfx{
         ~CFXRenderSystem();
         CFXRenderSystem(const CFXRenderSystem &) = delete;
         CFXRenderSystem &operator=(const CFXRenderSystem &) = delete;
-        void renderGameObjects(FrameInfo &frameInfo, std::vector<CFXGameObject> &cfxGameObjects);
+        void renderGameObjects(FrameInfo &frameInfo);
         
 
 

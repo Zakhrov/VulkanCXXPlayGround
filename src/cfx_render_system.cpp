@@ -38,15 +38,14 @@ namespace cfx{
     }
     
 
-    void CFXRenderSystem::renderGameObjects(FrameInfo &frameInfo, std::vector<CFXGameObject> &cfxGameObjects){
+    void CFXRenderSystem::renderGameObjects(FrameInfo &frameInfo){
       // std::cout << "RENDER GAME OBJECTS ON " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
       cfxPipeLines[frameInfo.deviceIndex]->bind(frameInfo.commandBuffer);
       vkCmdBindDescriptorSets(frameInfo.commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,pipelineLayout[frameInfo.deviceIndex],0,1,&frameInfo.globalDescriptorSet,0,nullptr);
 
-  for (auto& obj : cfxGameObjects) {
-    // obj.transformComponent.rotation.y = glm::mod(obj.transformComponent.rotation.y + 0.01f, glm::two_pi<float>());
-    // obj.transformComponent.rotation.x = glm::mod(obj.transformComponent.rotation.x + 0.005f, glm::two_pi<float>());
-
+  for (auto& kv : frameInfo.gameObjects) {
+    auto& obj = kv.second;
+    if(obj.model == nullptr) continue;
     SimplePushConstantData push{};
     push.modelMatrix = obj.transformComponent.mat4();
     push.normlaMatrix = obj.transformComponent.normalMatrix();

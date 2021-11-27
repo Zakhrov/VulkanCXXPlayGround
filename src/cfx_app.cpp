@@ -56,7 +56,7 @@ namespace cfx{
             uboBuffers[deviceIndex][i]->map();
             std::cout<< "MAPPED UBO FOR FRAME " << i << " ON DEVICE "  << deviceIndex << std::endl;
           }
-          cfxSetLayouts[deviceIndex] = CFXDescriptorSetLayout::Builder(cfxDevice).addBinding(0,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,VK_SHADER_STAGE_VERTEX_BIT).build(deviceIndex);
+          cfxSetLayouts[deviceIndex] = CFXDescriptorSetLayout::Builder(cfxDevice).addBinding(0,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,VK_SHADER_STAGE_ALL_GRAPHICS).build(deviceIndex);
           
           
           for(int i=0; i< cfxGlobalDescriptorSets[deviceIndex].size(); i++){
@@ -101,7 +101,7 @@ namespace cfx{
           
           if(renderBuffer.commandBuffer != nullptr){
             int frameIndex = cfxRenderer.getFrameIndex();
-            FrameInfo frameInfo{frameIndex,frameTime,renderBuffer.commandBuffer,camera,renderBuffer.deviceIndex,cfxGlobalDescriptorSets[renderBuffer.deviceIndex][frameIndex]};
+            FrameInfo frameInfo{frameIndex,frameTime,renderBuffer.commandBuffer,camera,renderBuffer.deviceIndex,cfxGlobalDescriptorSets[renderBuffer.deviceIndex][frameIndex],cfxGameObjects};
             GlobalUbo globalUbo{};
             globalUbo.projectionView = camera.getProjection() * camera.getView();
             uboBuffers[renderBuffer.deviceIndex][frameIndex]->writeToBuffer(&globalUbo);
@@ -109,7 +109,7 @@ namespace cfx{
 
             
             cfxRenderer.beginSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
-            cfxRenderSystem.renderGameObjects(frameInfo,cfxGameObjects);
+            cfxRenderSystem.renderGameObjects(frameInfo);
             cfxRenderer.endSwapChainRenderPass(renderBuffer.commandBuffer,renderBuffer.deviceMask,renderBuffer.deviceIndex);
             cfxRenderer.endFrame(renderBuffer.deviceIndex);
             vkDeviceWaitIdle(cfxDevice.device(renderBuffer.deviceIndex));
@@ -144,20 +144,20 @@ namespace cfx{
           smoothVase.transformComponent.translation = {-.5f,.5f,0.f};
           smoothVase.transformComponent.scale = glm::vec3{3.f,1.5f,3.f};
           smoothVase.model = cfxModel;
-          cfxGameObjects.push_back(std::move(smoothVase));
+          cfxGameObjects.emplace(smoothVase.getId() ,std::move(smoothVase));
           cfxModel = CFXModel::createModelFromFile(cfxDevice, "models/flat_vase.obj");
           auto flatVase = CFXGameObject::createGameObject();
           flatVase.transformComponent.translation = {.5f,.5f,0.f};
           flatVase.transformComponent.scale = glm::vec3{3.f,1.5f,3.f};
           flatVase.model = cfxModel;
-          cfxGameObjects.push_back(std::move(flatVase));
+          cfxGameObjects.emplace(flatVase.getId(),std::move(flatVase));
 
           cfxModel = CFXModel::createModelFromFile(cfxDevice, "models/quad.obj");
           auto floor = CFXGameObject::createGameObject();
           floor.transformComponent.translation = {0.f,.5f,0.f};
           floor.transformComponent.scale = glm::vec3{10.f,1.f,10.f};
           floor.model = cfxModel;
-          cfxGameObjects.push_back(std::move(floor));
+          cfxGameObjects.emplace(floor.getId(), std::move(floor));
 
         
         

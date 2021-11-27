@@ -36,7 +36,7 @@ namespace cfx{
         // CFXSwapChain cfxSwapChain{cfxDevice,window.getExtent()};
         Renderer cfxRenderer{window,cfxDevice};
         std::vector<std::unique_ptr<CFXDescriptorPool>> cfxDescriptorPools;
-        std::vector<CFXGameObject> cfxGameObjects; 
+        CFXGameObject::Map cfxGameObjects; 
         
         
     };
