@@ -10,9 +10,9 @@ namespace cfx{
 
     }
     CFXPipeLine::~CFXPipeLine(){
-    //    vkDestroyShaderModule(cfxDevice.device(deviceIndex),vertShaderModule,nullptr);
-    //     vkDestroyShaderModule(cfxDevice.device(deviceIndex),fragShaderModule,nullptr);
-    //     vkDestroyPipeline(cfxDevice.device(deviceIndex),graphicsPipeline,nullptr);
+       vkDestroyShaderModule(cfxDevice.device(deviceIndex),vertShaderModule,nullptr);
+        vkDestroyShaderModule(cfxDevice.device(deviceIndex),fragShaderModule,nullptr);
+        vkDestroyPipeline(cfxDevice.device(deviceIndex),graphicsPipeline,nullptr);
     }
     std::vector<char> CFXPipeLine::readFile(const std::string& filepath){
         std::ifstream file{filepath, std::ios::ate | std::ios::binary};

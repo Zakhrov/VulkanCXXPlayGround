@@ -60,11 +60,10 @@ CFXDevice::CFXDevice(CFXWindow &window) : window{window} {
 }
 
 CFXDevice::~CFXDevice() {
-  for(VkDevice device: devices_){
-    for(VkCommandPool commandPool: commandPools){
-    // vkDestroyCommandPool(device, commandPool, nullptr);
-  }
-  vkDestroyDevice(device, nullptr);
+
+  for(int deviceIndex = 0; deviceIndex < devices_.size(); deviceIndex ++){
+  vkDestroyCommandPool(devices_[deviceIndex], commandPools[deviceIndex], nullptr);
+  vkDestroyDevice(devices_[deviceIndex], nullptr);
 
   }
 

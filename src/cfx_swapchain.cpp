@@ -60,16 +60,16 @@ CFXSwapChain::~CFXSwapChain() {
   
   
 
-  for(int i=0; i < swapChainImages[deviceIndex].size();i++){
+  // for(int i=0; i < swapChainImages[deviceIndex].size();i++){
       
-      vkDestroyImage(device.device(deviceIndex), swapChainImages[deviceIndex][i], nullptr);    
-  }
+  //     vkDestroyImage(device.device(deviceIndex), swapChainImages[deviceIndex][i], nullptr);    
+  // }
   vkDestroySwapchainKHR(device.device(deviceIndex), swapChains[deviceIndex], nullptr);
 
   for (int i = 0; i < depthImages[deviceIndex].size(); i++) {
     vkDestroyImageView(device.device(deviceIndex), depthImageViews[deviceIndex][i], nullptr);
-    vkDestroyImage(device.device(0), depthImages[deviceIndex][i], nullptr);
-    vkFreeMemory(device.device(0), depthImageMemorys[deviceIndex][i], nullptr);
+    vkDestroyImage(device.device(deviceIndex), depthImages[deviceIndex][i], nullptr);
+    vkFreeMemory(device.device(deviceIndex), depthImageMemorys[deviceIndex][i], nullptr);
     
   }
   
@@ -83,7 +83,7 @@ CFXSwapChain::~CFXSwapChain() {
   
 
   // cleanup synchronization objects
-  // vkDestroyRenderPass(device.device(deviceIndex), renderPass, nullptr);
+  vkDestroyRenderPass(device.device(deviceIndex), renderPasses[deviceIndex], nullptr);
   destroySyncObjects(deviceIndex);
 
   }
@@ -99,18 +99,7 @@ VkResult CFXSwapChain::acquireNextImage(uint32_t *imageIndex,uint32_t deviceInde
   
   
   
-  // if(deviceIndex != 0){
-  //   // vkDestroyRenderPass(device.device(0), renderPass, nullptr);
-  //   // vkDestroyRenderPass(device.device(deviceIndex), renderPass, nullptr);
-    
-  //   // destroySyncObjects(0);
-  //   // destroySyncObjects(deviceIndex);
-    
-  // }
-  
-  
-  // std::cout << "ACQ NEXT IMG" << std::endl;
-  // vkResetFences(device.device(deviceIndex), 1, &inFlightFences[deviceIndex][currentFrame]);
+ 
   vkWaitForFences(
       device.device(deviceIndex),
       1,
