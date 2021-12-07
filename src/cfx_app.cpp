@@ -117,7 +117,7 @@ namespace cfx{
           auto frameTimeEnd = std::chrono::high_resolution_clock::now();
           float renderFrameTime = std::chrono::duration<float,std::chrono::nanoseconds::period>(frameTimeEnd - frameTimeBegin).count();
           // std::cout << "FRAME TIME = "<< renderFrameTime << " ms" << std::endl;
-          std::string framerateString = std::to_string(1000000000 / renderFrameTime) + " fps " + std::to_string(renderFrameTime) +  " ns";
+          std::string framerateString = std::to_string(1000000000 / renderFrameTime) + " fps " + std::to_string(renderFrameTime /1000000) +  " ms";
           
           window.setWindowName(framerateString );
           

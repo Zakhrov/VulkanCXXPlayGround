@@ -12,8 +12,8 @@
 namespace cfx{
     class App{
         public:
-        static constexpr int WIDTH = 800;
-        static constexpr int HEIGHT = 600;
+        static constexpr int WIDTH = 1600;
+        static constexpr int HEIGHT = 900;
         App();
         ~App();
         App(const App &) = delete;
