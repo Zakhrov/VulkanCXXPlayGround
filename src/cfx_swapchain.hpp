@@ -56,7 +56,7 @@ namespace cfx{
   VkSurfaceFormatKHR chooseSwapSurfaceFormat(
       const std::vector<VkSurfaceFormatKHR> &availableFormats);
   VkPresentModeKHR chooseSwapPresentMode(
-      const std::vector<VkPresentModeKHR> &availablePresentModes);
+      const std::vector<VkPresentModeKHR> &availablePresentModes,int deviceIndex);
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 
   std::vector<VkFormat> swapChainImageFormat;
