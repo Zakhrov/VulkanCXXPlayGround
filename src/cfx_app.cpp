@@ -86,6 +86,9 @@ namespace cfx
     auto pollTimeStart = std::chrono::high_resolution_clock::now();
     std::string deviceName = cfxDevice.getDeviceName(0);
     std::vector<std::string> framerateStrings(cfxDevice.getDevicesinDeviceGroup());
+    std::vector<float> frameTimes(cfxDevice.getDevicesinDeviceGroup());
+    float totalFrameTime = 0;
+    int frameCounter = 0;
 
     while (!window.shouldClose())
     {
@@ -129,7 +132,13 @@ namespace cfx
         auto frameTimeEnd = std::chrono::high_resolution_clock::now();
         float renderFrameTime = std::chrono::duration<float, std::chrono::milliseconds::period>(frameTimeEnd - frameTimeStart).count();
         
-        framerateStrings[renderBuffer.deviceIndex] = "GPU " + cfxDevice.getDeviceName(renderBuffer.deviceIndex) + " Frame Index " + std::to_string(frameIndex) + " CPU Framerate " + std::to_string(1000 / renderFrameTime )  + " fps  CPU Frame time "+ std::to_string(renderFrameTime) + " ms ";
+        framerateStrings[renderBuffer.deviceIndex] = "GPU " + cfxDevice.getDeviceName(renderBuffer.deviceIndex) + "  Frame time "+ std::to_string(renderFrameTime) + " ms ";
+        totalFrameTime += renderFrameTime;
+        frameCounter++;
+
+        
+        
+        
       }
 
       auto pollTimeEnd = std::chrono::high_resolution_clock::now();
@@ -137,13 +146,22 @@ namespace cfx
       float pollInterval = std::chrono::duration<float, std::chrono::milliseconds::period>(pollTimeEnd - pollTimeStart).count();
       
 
-      if (pollInterval >= 50)
+      if (pollInterval >= 500)
       {
         std::ostringstream oss;
         std::copy(framerateStrings.begin(), framerateStrings.end(), std::ostream_iterator<std::string>(oss, " ; "));
 
         std::string result(oss.str());
-        framerateString = result;
+        // framerateString = result;
+        
+        
+        float avgFrameTime = totalFrameTime / frameCounter;
+        framerateString = "Average " + std::to_string(1000 / avgFrameTime ) + " FPS " + std::to_string(avgFrameTime ) + " ms Polled Frames: " + std::to_string(frameCounter) + " Polled time " + std::to_string(totalFrameTime) +" ms ";
+        framerateString += result;
+        totalFrameTime = 0; 
+        frameCounter = 0;
+
+
         pollTimeStart = pollTimeEnd;
       }
 
