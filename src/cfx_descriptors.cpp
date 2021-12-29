@@ -25,7 +25,7 @@ CFXDescriptorSetLayout::Builder &CFXDescriptorSetLayout::Builder::addBinding(
 }
  
 std::unique_ptr<CFXDescriptorSetLayout> CFXDescriptorSetLayout::Builder::build(int deviceIndex) const {
-  std::cout<< "BUILD DESCRIPTOR SET LAYOUT" << std::endl;
+  
   return std::make_unique<CFXDescriptorSetLayout>(cfxDevice, bindings,deviceIndex);
 }
 
@@ -34,7 +34,7 @@ std::unique_ptr<CFXDescriptorSetLayout> CFXDescriptorSetLayout::Builder::build(i
 CFXDescriptorSetLayout::CFXDescriptorSetLayout(
     CFXDevice &cfxDevice, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings,int deviceIndex)
     : cfxDevice{cfxDevice}, bindings{bindings}, layoutDeviceIndex{deviceIndex} {
-      std::cout<< "BUILD DESCRIPTOR SET LAYOUT CONSTRUCTOR" << std::endl;
+      
   std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings{};
   for (auto kv : bindings) {
     setLayoutBindings.push_back(kv.second);
@@ -44,7 +44,7 @@ CFXDescriptorSetLayout::CFXDescriptorSetLayout(
   descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
   descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(setLayoutBindings.size());
   descriptorSetLayoutInfo.pBindings = setLayoutBindings.data();
-  std::cout<< "BUILD DESCRIPTOR SET LAYOUT CREAT INFO SET" << std::endl;
+  
  
   if (vkCreateDescriptorSetLayout(
           cfxDevice.device(layoutDeviceIndex),
@@ -54,7 +54,7 @@ CFXDescriptorSetLayout::CFXDescriptorSetLayout(
     throw std::runtime_error("failed to create descriptor set layout!");
   }
   else{
-    std::cout<< "DESCRIPTOR SET LAYOUT CREATED" << std::endl;
+    
   }
 }
  

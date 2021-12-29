@@ -68,15 +68,15 @@ namespace cfx
       for (int i = 0; i < cfxGlobalDescriptorSets[deviceIndex].size(); i++)
       {
 
-        // std::cout<< "WRITING DESCRIPTOR SET " << i << " ON DEVICE " << deviceIndex << std::endl;
+        
         auto bufferInfo = uboBuffers[deviceIndex][i]->descriptorInfo();
         CFXDescriptorWriter(*cfxSetLayouts[deviceIndex], *cfxDescriptorPools[deviceIndex]).writeBuffer(0, &bufferInfo).build(cfxGlobalDescriptorSets[deviceIndex][i], deviceIndex);
-        // std::cout<< "WROTE DESCRIPTOR SET " << i << " ON DEVICE " << deviceIndex << std::endl;
+        
       }
-      // std::cout<< "FINISHED DESCRIPTOR SET ALLOCATION FOR DEVICE "  << deviceIndex << std::endl;
+      
     }
 
-    // std::cout << "CREATE RENDER SYSTEM"<< std::endl;
+    
     CFXRenderSystem cfxRenderSystem{cfxDevice, cfxRenderer.getSwapChainRenderPasses(), cfxSetLayouts};
     CFXPointLightSystem cfxPointLightSystem{cfxDevice, cfxRenderer.getSwapChainRenderPasses(), cfxSetLayouts};
     CFXCamera camera{};

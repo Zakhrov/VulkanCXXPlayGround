@@ -24,7 +24,7 @@ namespace cfx{
     }
     
     void Renderer::recreateSwapChain(){
-        // std::cout << "RECREATE SWAPCHAIN"<< std::endl;
+        
         auto extent = cfxWindow.getExtent();
         while(extent.width == 0 || extent.height == 0){
             extent = cfxWindow.getExtent();
