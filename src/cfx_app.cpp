@@ -1,5 +1,6 @@
 #include "cfx_app.hpp"
-#include "cfx_render_system.hpp"
+#include "systems/cfx_render_system.hpp"
+#include "systems/cfx_point_light_system.hpp"
 #include "cfx_camera.hpp"
 #include "cfx_buffer.hpp"
 #include "keyboard_movement_controller.hpp"
@@ -20,7 +21,8 @@ namespace cfx
 {
   struct GlobalUbo
   {
-    glm::mat4 projectionView{1.f};
+    glm::mat4 projection{1.f};
+    glm::mat4 view{1.f};
     glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .07f};
     glm::vec3 lightPosition{-1.f};
     alignas(16) glm::vec4 lightColor{1.f};
@@ -76,6 +78,7 @@ namespace cfx
 
     // std::cout << "CREATE RENDER SYSTEM"<< std::endl;
     CFXRenderSystem cfxRenderSystem{cfxDevice, cfxRenderer.getSwapChainRenderPasses(), cfxSetLayouts};
+    CFXPointLightSystem cfxPointLightSystem{cfxDevice, cfxRenderer.getSwapChainRenderPasses(), cfxSetLayouts};
     CFXCamera camera{};
 
     auto viewerObject = CFXGameObject::createGameObject();
@@ -114,13 +117,16 @@ namespace cfx
 
         FrameInfo frameInfo{frameIndex, frameTime, renderBuffer.commandBuffer, camera, renderBuffer.deviceIndex, cfxGlobalDescriptorSets[renderBuffer.deviceIndex][frameIndex], cfxGameObjects};
         GlobalUbo globalUbo{};
-        globalUbo.projectionView = camera.getProjection() * camera.getView();
+        globalUbo.projection = camera.getProjection();
+        globalUbo.view = camera.getView();
 
         uboBuffers[renderBuffer.deviceIndex][frameIndex]->writeToBuffer(&globalUbo);
 
         uboBuffers[renderBuffer.deviceIndex][frameIndex]->flush();
 
         cfxRenderer.beginSwapChainRenderPass(renderBuffer.commandBuffer, renderBuffer.deviceMask, renderBuffer.deviceIndex);
+
+        cfxPointLightSystem.render(frameInfo);
 
         cfxRenderSystem.renderGameObjects(frameInfo);
 

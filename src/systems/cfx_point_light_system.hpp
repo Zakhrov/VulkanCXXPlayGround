@@ -1,25 +1,25 @@
 #pragma once
 
 
-#include "cfx_pipeline.hpp"
-#include "cfx_device.hpp"
-#include "cfx_camera.hpp"
+#include "../cfx_pipeline.hpp"
+#include "../cfx_device.hpp"
+#include "../cfx_camera.hpp"
 
-#include "cfx_model.hpp"
-#include "cfx_game_object.hpp"
-#include "cfx_frame_info.hpp"
-#include "cfx_descriptors.hpp"
+#include "../cfx_model.hpp"
+#include "../cfx_game_object.hpp"
+#include "../cfx_frame_info.hpp"
+#include "../cfx_descriptors.hpp"
 #include<memory>
 #include<vector>
 #include <glm/glm.hpp>
 namespace cfx{
-    class CFXRenderSystem{
+    class CFXPointLightSystem{
         public:
-        CFXRenderSystem(CFXDevice &device, std::vector<VkRenderPass> renderPasses,std::vector<std::unique_ptr<CFXDescriptorSetLayout>> &cfxSetLayouts);
-        ~CFXRenderSystem();
-        CFXRenderSystem(const CFXRenderSystem &) = delete;
-        CFXRenderSystem &operator=(const CFXRenderSystem &) = delete;
-        void renderGameObjects(FrameInfo &frameInfo);
+        CFXPointLightSystem(CFXDevice &device, std::vector<VkRenderPass> renderPasses,std::vector<std::unique_ptr<CFXDescriptorSetLayout>> &cfxSetLayouts);
+        ~CFXPointLightSystem();
+        CFXPointLightSystem(const CFXPointLightSystem &) = delete;
+        CFXPointLightSystem &operator=(const CFXPointLightSystem &) = delete;
+        void render(FrameInfo &frameInfo);
         
 
 

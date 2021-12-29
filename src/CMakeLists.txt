@@ -1,8 +1,8 @@
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(SOURCES main.cpp cfx_buffer.cpp cfx_camera.cpp cfx_descriptors.cpp cfx_window.cpp cfx_app.cpp cfx_pipeline.cpp cfx_device.cpp cfx_swapchain.cpp cfx_model.cpp cfx_renderer.cpp cfx_render_system.cpp cfx_game_object.cpp keyboard_movement_controller.cpp)
-
+# set(SOURCES main.cpp cfx_buffer.cpp cfx_camera.cpp cfx_descriptors.cpp cfx_window.cpp cfx_app.cpp cfx_pipeline.cpp cfx_device.cpp cfx_swapchain.cpp cfx_model.cpp cfx_renderer.cpp systems/cfx_render_system.cpp cfx_game_object.cpp keyboard_movement_controller.cpp)
+file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 # set( ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
 
 set(SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
