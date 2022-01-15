@@ -152,7 +152,7 @@ namespace cfx
       float pollInterval = std::chrono::duration<float, std::chrono::milliseconds::period>(pollTimeEnd - pollTimeStart).count();
       
 
-      if (pollInterval >= 500)
+      if (pollInterval >= 100)
       {
         std::ostringstream oss;
         std::copy(framerateStrings.begin(), framerateStrings.end(), std::ostream_iterator<std::string>(oss, " ; "));
