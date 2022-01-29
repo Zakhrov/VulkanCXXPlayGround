@@ -19,14 +19,7 @@
 
 namespace cfx
 {
-  struct GlobalUbo
-  {
-    glm::mat4 projection{1.f};
-    glm::mat4 view{1.f};
-    glm::vec4 ambientLightColor{1.f, 1.f, 1.f, .07f};
-    glm::vec3 lightPosition{-1.f};
-    alignas(16) glm::vec4 lightColor{1.f};
-  };
+ 
 
   App::App()
   {
@@ -120,6 +113,8 @@ namespace cfx
         globalUbo.projection = camera.getProjection();
         globalUbo.view = camera.getView();
 
+        cfxPointLightSystem.update(frameInfo,globalUbo);
+
         uboBuffers[renderBuffer.deviceIndex][frameIndex]->writeToBuffer(&globalUbo);
 
         uboBuffers[renderBuffer.deviceIndex][frameIndex]->flush();
@@ -197,6 +192,23 @@ namespace cfx
     floor.transformComponent.scale = glm::vec3{10.f, 1.f, 10.f};
     floor.model = cfxModel;
     cfxGameObjects.emplace(floor.getId(), std::move(floor));
+
+     std::vector<glm::vec3> lightColors{
+      {1.f, .1f, .1f},
+      {.1f, .1f, 1.f},
+      {.1f, 1.f, .1f},
+      {1.f, 1.f, .1f},
+      {.1f, 1.f, 1.f},
+      {1.f, 1.f, 1.f}  //
+  };
+
+    for(int i=0; i < lightColors.size(); i++){
+      auto pointLight = CFXGameObject::makePointLight(.1f);
+      auto rotateLight = glm::rotate(glm::mat4(1.f),(i * glm::two_pi<float>()) / lightColors.size(), {0.1,-1.f,0.f});
+      pointLight.color = lightColors[i];
+      pointLight.transformComponent.translation = glm::vec3(rotateLight * glm::vec4(-1.f,-1.f,-1.f,1.f));
+      cfxGameObjects.emplace(pointLight.getId(),std::move(pointLight));
+    }
   }
 
 }

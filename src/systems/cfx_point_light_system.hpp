@@ -19,6 +19,7 @@ namespace cfx{
         ~CFXPointLightSystem();
         CFXPointLightSystem(const CFXPointLightSystem &) = delete;
         CFXPointLightSystem &operator=(const CFXPointLightSystem &) = delete;
+        void update(FrameInfo &frameInfo, GlobalUbo &ubo);
         void render(FrameInfo &frameInfo);
         
 

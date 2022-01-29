@@ -15,6 +15,11 @@ namespace cfx{
         
     };
 
+    struct PointLightComponent{
+        float lightIntensity = 1.0f;
+
+    };
+
 
     class CFXGameObject{
         public:
@@ -25,15 +30,19 @@ namespace cfx{
             return CFXGameObject{currentId++};
 
         }
+        static CFXGameObject makePointLight(float intensity = 10.0f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.0f));
         CFXGameObject(const CFXGameObject &) = delete;
         CFXGameObject &operator=(const CFXGameObject &) = delete;
         CFXGameObject(CFXGameObject &&) = default;
         CFXGameObject &operator=(CFXGameObject &&) = default;
 
         id_t getId() { return id;}
-        std::shared_ptr<CFXModel> model{};
+        
         glm::vec3 color{};
         TransformComponent transformComponent{};
+
+        std::shared_ptr<CFXModel> model{};
+        std::unique_ptr<PointLightComponent> pointLight = nullptr;
 
         private:
         id_t id;
