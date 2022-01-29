@@ -75,7 +75,8 @@ namespace cfx
     CFXCamera camera{};
 
     auto viewerObject = CFXGameObject::createGameObject();
-    viewerObject.transformComponent.translation.z = -2.5f;
+    viewerObject.transformComponent.translation.z = -7.5f;
+    viewerObject.transformComponent.translation.y = -1.5f;
     KeyboardMovementController cameraController{};
 
     auto currentTime = std::chrono::high_resolution_clock::now();
