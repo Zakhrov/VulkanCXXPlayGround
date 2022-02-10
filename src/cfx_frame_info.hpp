@@ -7,13 +7,12 @@
 
 namespace cfx
 {
-    #define MAX_LIGHTS 10
+#define MAX_LIGHTS 10
 
-    struct PointLight{
+    struct PointLight
+    {
         glm::vec4 position{};
         glm::vec4 color{};
-
-
     };
     struct FrameInfo
     {

@@ -62,16 +62,14 @@ namespace cfx
         };
     }
 
-    CFXGameObject CFXGameObject::makePointLight(float intensity, float radius, glm::vec3 color){
+    CFXGameObject CFXGameObject::makePointLight(float intensity, float radius, glm::vec3 color)
+    {
         CFXGameObject gameObject = CFXGameObject::createGameObject();
         gameObject.color = color;
         gameObject.transformComponent.scale.x = radius;
         gameObject.pointLight = std::make_unique<PointLightComponent>();
         gameObject.pointLight->lightIntensity = intensity;
         return gameObject;
-
     }
-
-
 
 }

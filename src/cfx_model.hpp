@@ -9,12 +9,13 @@
 #include <vector>
 #include <memory>
 
-
-
-namespace cfx {
-    class CFXModel{
-        public:
-        struct Vertex{
+namespace cfx
+{
+    class CFXModel
+    {
+    public:
+        struct Vertex
+        {
             glm::vec3 position{};
             glm::vec3 color{};
             glm::vec3 normal{};
@@ -23,34 +24,35 @@ namespace cfx {
             static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
             static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
 
-            bool operator==(const Vertex &other)const{
+            bool operator==(const Vertex &other) const
+            {
                 return position == other.position && color == other.color && normal == other.normal && uv == other.uv;
             }
         };
-        struct Builder{
+        struct Builder
+        {
             std::vector<Vertex> vertices{};
             std::vector<uint32_t> indices{};
             void loadModel(const std::string &filepath);
         };
-        CFXModel(CFXDevice& device,const CFXModel::Builder &builder);
+        CFXModel(CFXDevice &device, const CFXModel::Builder &builder);
         ~CFXModel();
         CFXModel(const CFXModel &) = delete;
         CFXModel &operator=(const CFXModel &) = delete;
 
-        static std::unique_ptr<CFXModel> createModelFromFile(CFXDevice &device,const std::string &filepath);
+        static std::unique_ptr<CFXModel> createModelFromFile(CFXDevice &device, const std::string &filepath);
 
-        void bind(VkCommandBuffer commandBuffer,int deviceIndex);
+        void bind(VkCommandBuffer commandBuffer, int deviceIndex);
         void draw(VkCommandBuffer commandBuffer);
-        private:
+
+    private:
         void createVertexBuffers(const std::vector<Vertex> &vertices, int deviceIndex);
-        void createIndexBuffers(const std::vector<uint32_t> &indices,int deviceIndex);
-        CFXDevice& cfxDevice;
+        void createIndexBuffers(const std::vector<uint32_t> &indices, int deviceIndex);
+        CFXDevice &cfxDevice;
         std::vector<std::unique_ptr<CFXBuffer>> vertexBuffer;
         uint32_t vertexCount;
         bool hasIndexBuffer;
         std::vector<std::unique_ptr<CFXBuffer>> indexBuffer;
         uint32_t indexCount;
-        
-
     };
 }

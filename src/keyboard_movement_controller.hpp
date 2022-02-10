@@ -3,10 +3,13 @@
 #include "cfx_game_object.hpp"
 #include "cfx_window.hpp"
 
-namespace cfx{
-    class KeyboardMovementController{
-        public:
-        struct KeyMappings{
+namespace cfx
+{
+    class KeyboardMovementController
+    {
+    public:
+        struct KeyMappings
+        {
             int moveLeft = GLFW_KEY_A;
             int moveRight = GLFW_KEY_D;
             int moveForward = GLFW_KEY_W;
@@ -19,11 +22,10 @@ namespace cfx{
             int lookDown = GLFW_KEY_DOWN;
         };
 
-        void moveInPlaneXZ(GLFWwindow *window,float dt, CFXGameObject &gameObject);
+        void moveInPlaneXZ(GLFWwindow *window, float dt, CFXGameObject &gameObject);
 
         KeyMappings keys{};
         float moveSpeed{0.003f};
         float lookSpeed{0.005f};
-
     };
 }

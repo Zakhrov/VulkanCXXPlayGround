@@ -19,7 +19,6 @@
 
 namespace cfx
 {
- 
 
   App::App()
   {
@@ -61,15 +60,11 @@ namespace cfx
       for (int i = 0; i < cfxGlobalDescriptorSets[deviceIndex].size(); i++)
       {
 
-        
         auto bufferInfo = uboBuffers[deviceIndex][i]->descriptorInfo();
         CFXDescriptorWriter(*cfxSetLayouts[deviceIndex], *cfxDescriptorPools[deviceIndex]).writeBuffer(0, &bufferInfo).build(cfxGlobalDescriptorSets[deviceIndex][i], deviceIndex);
-        
       }
-      
     }
 
-    
     CFXRenderSystem cfxRenderSystem{cfxDevice, cfxRenderer.getSwapChainRenderPasses(), cfxSetLayouts};
     CFXPointLightSystem cfxPointLightSystem{cfxDevice, cfxRenderer.getSwapChainRenderPasses(), cfxSetLayouts};
     CFXCamera camera{};
@@ -114,7 +109,7 @@ namespace cfx
         globalUbo.projection = camera.getProjection();
         globalUbo.view = camera.getView();
 
-        cfxPointLightSystem.update(frameInfo,globalUbo);
+        cfxPointLightSystem.update(frameInfo, globalUbo);
 
         uboBuffers[renderBuffer.deviceIndex][frameIndex]->writeToBuffer(&globalUbo);
 
@@ -133,20 +128,15 @@ namespace cfx
         vkDeviceWaitIdle(cfxDevice.device(renderBuffer.deviceIndex));
         auto frameTimeEnd = std::chrono::high_resolution_clock::now();
         float renderFrameTime = std::chrono::duration<float, std::chrono::milliseconds::period>(frameTimeEnd - frameTimeStart).count();
-        
-        framerateStrings[renderBuffer.deviceIndex] = "GPU " + cfxDevice.getDeviceName(renderBuffer.deviceIndex) + "  Frame time "+ std::to_string(renderFrameTime) + " ms ";
+
+        framerateStrings[renderBuffer.deviceIndex] = "GPU " + cfxDevice.getDeviceName(renderBuffer.deviceIndex) + "  Frame time " + std::to_string(renderFrameTime) + " ms ";
         totalFrameTime += renderFrameTime;
         frameCounter++;
-
-        
-        
-        
       }
 
       auto pollTimeEnd = std::chrono::high_resolution_clock::now();
 
       float pollInterval = std::chrono::duration<float, std::chrono::milliseconds::period>(pollTimeEnd - pollTimeStart).count();
-      
 
       if (pollInterval >= 100)
       {
@@ -155,14 +145,12 @@ namespace cfx
 
         std::string result(oss.str());
         // framerateString = result;
-        
-        
-        float avgFrameTime = totalFrameTime / frameCounter;
-        framerateString = "Average " + std::to_string(1000 / avgFrameTime ) + " FPS " + std::to_string(avgFrameTime ) + " ms Polled Frames: " + std::to_string(frameCounter) + " Polled time " + std::to_string(totalFrameTime) +" ms ";
-        framerateString += result;
-        totalFrameTime = 0; 
-        frameCounter = 0;
 
+        float avgFrameTime = totalFrameTime / frameCounter;
+        framerateString = "Average " + std::to_string(1000 / avgFrameTime) + " FPS " + std::to_string(avgFrameTime) + " ms Polled Frames: " + std::to_string(frameCounter) + " Polled time " + std::to_string(totalFrameTime) + " ms ";
+        framerateString += result;
+        totalFrameTime = 0;
+        frameCounter = 0;
 
         pollTimeStart = pollTimeEnd;
       }
@@ -194,21 +182,22 @@ namespace cfx
     floor.model = cfxModel;
     cfxGameObjects.emplace(floor.getId(), std::move(floor));
 
-     std::vector<glm::vec3> lightColors{
-      {1.f, .1f, .1f},
-      {.1f, .1f, 1.f},
-      {.1f, 1.f, .1f},
-      {1.f, 1.f, .1f},
-      {.1f, 1.f, 1.f},
-      {1.f, 1.f, 1.f}  //
-  };
+    std::vector<glm::vec3> lightColors{
+        {1.f, .1f, .1f},
+        {.1f, .1f, 1.f},
+        {.1f, 1.f, .1f},
+        {1.f, 1.f, .1f},
+        {.1f, 1.f, 1.f},
+        {1.f, 1.f, 1.f} //
+    };
 
-    for(int i=0; i < lightColors.size(); i++){
+    for (int i = 0; i < lightColors.size(); i++)
+    {
       auto pointLight = CFXGameObject::makePointLight(.1f);
-      auto rotateLight = glm::rotate(glm::mat4(1.f),(i * glm::two_pi<float>()) / lightColors.size(), {0.1,-1.f,0.f});
+      auto rotateLight = glm::rotate(glm::mat4(1.f), (i * glm::two_pi<float>()) / lightColors.size(), {0.1, -1.f, 0.f});
       pointLight.color = lightColors[i];
-      pointLight.transformComponent.translation = glm::vec3(rotateLight * glm::vec4(-1.f,-1.f,-1.f,1.f));
-      cfxGameObjects.emplace(pointLight.getId(),std::move(pointLight));
+      pointLight.transformComponent.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+      cfxGameObjects.emplace(pointLight.getId(), std::move(pointLight));
     }
   }
 

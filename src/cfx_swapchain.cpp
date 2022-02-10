@@ -195,13 +195,12 @@ namespace cfx
     VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-    
+
     if (swapChainSupport.capabilities.maxImageCount > 0 &&
         imageCount > swapChainSupport.capabilities.maxImageCount)
     {
       imageCount = swapChainSupport.capabilities.maxImageCount;
     }
-    
 
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -253,7 +252,7 @@ namespace cfx
       throw std::runtime_error("failed to get swap chain images!");
     }
     swapChainImages[deviceIndex].resize(imageCount);
-    
+
     if (vkGetSwapchainImagesKHR(device.device(deviceIndex), swapChains[deviceIndex], &imageCount, swapChainImages[deviceIndex].data()) != VK_SUCCESS)
     {
       throw std::runtime_error("failed to get swap chain images!");
@@ -264,7 +263,7 @@ namespace cfx
 
   void CFXSwapChain::createImageViews(int deviceIndex)
   {
-    
+
     swapChainImageViews[deviceIndex].resize(swapChainImages[deviceIndex].size());
     for (size_t i = 0; i < swapChainImages[deviceIndex].size(); i++)
     {
@@ -506,7 +505,7 @@ namespace cfx
     //     return availablePresentMode;
     //   }
     // }
-    
+
     return VK_PRESENT_MODE_IMMEDIATE_KHR;
   }
 
