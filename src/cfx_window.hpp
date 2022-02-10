@@ -3,30 +3,30 @@
 #include <GLFW/glfw3.h>
 #include <string>
 
-namespace cfx{
-    class CFXWindow {
-        public:
-        CFXWindow(int w,int h, std::string name);
+namespace cfx
+{
+    class CFXWindow
+    {
+    public:
+        CFXWindow(int w, int h, std::string name);
         ~CFXWindow();
         CFXWindow(const CFXWindow &) = delete;
         CFXWindow &operator=(const CFXWindow &) = delete;
-        bool shouldClose() {return glfwWindowShouldClose(window);}
-        void createWindowSurface(VkInstance instance,VkSurfaceKHR* surface_);
-        bool wasWindowResized() {return framebufferResized;}
-        void restWindowResizedFlag(){framebufferResized = false;}
-        GLFWwindow *getGLFWwindow() const {return window;}
+        bool shouldClose() { return glfwWindowShouldClose(window); }
+        void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface_);
+        bool wasWindowResized() { return framebufferResized; }
+        void restWindowResizedFlag() { framebufferResized = false; }
+        GLFWwindow *getGLFWwindow() const { return window; }
 
+        VkExtent2D getExtent() { return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)}; }
 
-        VkExtent2D getExtent(){return {static_cast<uint32_t>(width),static_cast<uint32_t>(height)};}
-
-        private:
+    private:
         void initWindow();
-        static void framebufferResizedCallback(GLFWwindow *window,int width,int height);
+        static void framebufferResizedCallback(GLFWwindow *window, int width, int height);
         int width;
         int height;
         bool framebufferResized = false;
         std::string windowName;
-            GLFWwindow *window;
-
+        GLFWwindow *window;
     };
 }
