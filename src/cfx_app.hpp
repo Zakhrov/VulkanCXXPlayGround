@@ -5,12 +5,14 @@
 #include "cfx_renderer.hpp"
 #include "cfx_model.hpp"
 #include "cfx_game_object.hpp"
-#include<memory>
-#include<vector>
+#include <memory>
+#include <vector>
 #include <glm/glm.hpp>
-namespace cfx{
-    class App{
-        public:
+namespace cfx
+{
+    class App
+    {
+    public:
         static constexpr int WIDTH = 800;
         static constexpr int HEIGHT = 600;
         App();
@@ -19,23 +21,14 @@ namespace cfx{
         App &operator=(const App &) = delete;
         void run();
 
-
-        private:
+    private:
         void loadGameObjects();
-        
-        
-        
-        
-        
-        
-    
 
-        CFXWindow window{WIDTH,HEIGHT,"Hello Vulkan"};
+        CFXWindow window{WIDTH, HEIGHT, "Hello Vulkan"};
         CFXDevice cfxDevice{window};
         // CFXSwapChain cfxSwapChain{cfxDevice,window.getExtent()};
-        Renderer cfxRenderer{window,cfxDevice};
+        Renderer cfxRenderer{window, cfxDevice};
         std::vector<VkCommandBuffer> commandBuffers;
-        std::vector<CFXGameObject> cfxGameObjects; 
-        
+        std::vector<CFXGameObject> cfxGameObjects;
     };
 }
