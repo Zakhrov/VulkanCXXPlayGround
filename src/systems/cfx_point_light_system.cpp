@@ -40,7 +40,7 @@ namespace cfx
     void CFXPointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo)
     {
         // std::cout << "UPDATING POINT LIGHT " << frameInfo.frameTime << std::endl;
-         auto rotateLight = glm::rotate(glm::mat4(1.f),frameInfo.frameTime / 1000, {0.1,-1.f,0.f});
+        auto rotateLight = glm::rotate(glm::mat4(1.f), frameInfo.frameTime / 10000, {0.1, -1.f, 0.f});
         int lightIndex = 0;
         for (auto &kv : frameInfo.gameObjects)
         {
@@ -49,7 +49,7 @@ namespace cfx
             {
                 continue;
             }
-            obj.transformComponent.translation = glm::vec3(rotateLight * glm::vec4(obj.transformComponent.translation,1.f));
+            obj.transformComponent.translation = glm::vec3(rotateLight * glm::vec4(obj.transformComponent.translation, 1.f));
             ubo.pointLights[lightIndex].position = glm::vec4(obj.transformComponent.translation, 1.f);
             ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
             lightIndex++;
@@ -60,6 +60,8 @@ namespace cfx
     void CFXPointLightSystem::render(FrameInfo &frameInfo)
     {
         // std::cout << "RENDER POINT LIGHT ON " << cfxDevice.getDeviceName(frameInfo.deviceIndex) << std::endl;
+        // if (frameInfo.deviceIndex > 0)
+        // {
 
         cfxPipeLines[frameInfo.deviceIndex]->bind(frameInfo.commandBuffer);
         vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout[frameInfo.deviceIndex], 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
@@ -80,6 +82,7 @@ namespace cfx
                 vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
             }
         }
+        // }
     }
     void CFXPointLightSystem::createPipelineLayout(VkDescriptorSetLayout descriptorSetLayout, int deviceIndex)
     {

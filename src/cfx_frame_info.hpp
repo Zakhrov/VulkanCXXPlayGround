@@ -7,7 +7,7 @@
 
 namespace cfx
 {
-    #define MAX_LIGHTS 10
+    #define MAX_LIGHTS 1000
 
     struct PointLight{
         glm::vec4 position{};

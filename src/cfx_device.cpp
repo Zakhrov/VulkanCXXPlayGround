@@ -204,6 +204,7 @@ namespace cfx
 
         std::cout << properties[i].deviceName << std::endl;
         std::cout << properties[i].deviceType << std::endl;
+        std::cout << properties[i].deviceID << std::endl;
         deviceNames[i] = properties[i].deviceName;
       }
     }
