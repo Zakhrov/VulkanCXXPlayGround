@@ -40,7 +40,7 @@ namespace cfx
     void CFXPointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo)
     {
         // std::cout << "UPDATING POINT LIGHT " << frameInfo.frameTime << std::endl;
-        auto rotateLight = glm::rotate(glm::mat4(1.f), frameInfo.frameTime / 10000, {0.1, -1.f, 0.f});
+        auto rotateLight = glm::rotate(glm::mat4(1.f), frameInfo.frameTime / 100, {0.1, -1.f, 0.f});
         int lightIndex = 0;
         for (auto &kv : frameInfo.gameObjects)
         {

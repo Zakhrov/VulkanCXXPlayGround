@@ -114,6 +114,7 @@ namespace cfx
         GlobalUbo globalUbo{};
         globalUbo.projection = camera.getProjection();
         globalUbo.view = camera.getView();
+        globalUbo.inverseView = camera.getInverseView();
 
         cfxPointLightSystem.update(frameInfo,globalUbo);
 
@@ -213,13 +214,13 @@ namespace cfx
   std::uniform_real_distribution<float> sizeDist{0.01f,0.1f};
 
   std::vector<glm::vec3> lightColors;
-  lightColors.resize(40);
+  lightColors.resize(5);
 
 
     for(int i=0; i < lightColors.size(); i++){
       lightColors[i] = {dist(rng),dist(rng),dist(rng)};
-      auto pointLight = CFXGameObject::makePointLight(i % 2 == 0 ? 2.f * intesnsityDist(rng) : intesnsityDist(rng),sizeDist(rng));
-      auto rotateLight = glm::rotate(glm::mat4(4.f),(i * glm::two_pi<float>()) / lightColors.size(), {0.1f,-1.f,0.f});
+      auto pointLight = CFXGameObject::makePointLight(intesnsityDist(rng),0.01f);
+      auto rotateLight = glm::rotate(glm::mat4(.7f),(i * glm::two_pi<float>()) / lightColors.size(), {0.1f,-1.f,0.f});
       pointLight.color = lightColors[i];
       pointLight.transformComponent.translation = glm::vec3(rotateLight * glm::vec4(-1.f,-1.f,-1.f,1.f));
       cfxGameObjects.emplace(pointLight.getId(),std::move(pointLight));
