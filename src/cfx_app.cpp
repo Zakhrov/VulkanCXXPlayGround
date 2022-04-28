@@ -220,7 +220,7 @@ namespace cfx
 
     for(int i=0; i < lightColors.size(); i++){
       lightColors[i] = {dist(rng),dist(rng),dist(rng)};
-      auto pointLight = CFXGameObject::makePointLight(intesnsityDist(rng),0.1f);
+      auto pointLight = CFXGameObject::makePointLight(intesnsityDist(rng),0.5f);
       auto rotateLight = glm::rotate(glm::mat4(.7f),(i * glm::two_pi<float>()) / lightColors.size(), {0.1f,-1.f,0.f});
       pointLight.color = lightColors[i];
       pointLight.transformComponent.translation = glm::vec3(rotateLight * glm::vec4(-1.f,-1.f,-1.f,1.f));
