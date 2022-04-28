@@ -124,9 +124,10 @@ namespace cfx
 
         cfxRenderer.beginSwapChainRenderPass(renderBuffer.commandBuffer, renderBuffer.deviceMask, renderBuffer.deviceIndex);
 
-        cfxPointLightSystem.render(frameInfo);
-
+        
+        // order here matters. We want to render the game objects before the point lights
         cfxRenderSystem.renderGameObjects(frameInfo);
+        cfxPointLightSystem.render(frameInfo);
 
         cfxRenderer.endSwapChainRenderPass(renderBuffer.commandBuffer, renderBuffer.deviceMask, renderBuffer.deviceIndex);
 
@@ -214,12 +215,12 @@ namespace cfx
   std::uniform_real_distribution<float> sizeDist{0.01f,0.1f};
 
   std::vector<glm::vec3> lightColors;
-  lightColors.resize(5);
+  lightColors.resize(3);
 
 
     for(int i=0; i < lightColors.size(); i++){
       lightColors[i] = {dist(rng),dist(rng),dist(rng)};
-      auto pointLight = CFXGameObject::makePointLight(intesnsityDist(rng),0.01f);
+      auto pointLight = CFXGameObject::makePointLight(intesnsityDist(rng),0.1f);
       auto rotateLight = glm::rotate(glm::mat4(.7f),(i * glm::two_pi<float>()) / lightColors.size(), {0.1f,-1.f,0.f});
       pointLight.color = lightColors[i];
       pointLight.transformComponent.translation = glm::vec3(rotateLight * glm::vec4(-1.f,-1.f,-1.f,1.f));

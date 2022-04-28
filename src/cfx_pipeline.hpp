@@ -4,6 +4,7 @@
 #include "cfx_device.hpp"
 namespace cfx {
     struct PipelineConfigInfo{
+    PipelineConfigInfo() = default;
        PipelineConfigInfo(const PipelineConfigInfo&) = delete;
   PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
 
@@ -31,6 +32,7 @@ namespace cfx {
         void operator=(const CFXPipeLine&) = delete;
 
         static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
+        static void enableAlphaBlending(PipelineConfigInfo& pipeline);
 
         void bind(VkCommandBuffer commandBuffer);
 

@@ -8,6 +8,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#include <map>
 
 namespace cfx
 {
@@ -40,7 +41,7 @@ namespace cfx
     void CFXPointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo)
     {
         // std::cout << "UPDATING POINT LIGHT " << frameInfo.frameTime << std::endl;
-        auto rotateLight = glm::rotate(glm::mat4(1.f), frameInfo.frameTime / 100, {0.1, -1.f, 0.f});
+        auto rotateLight = glm::rotate(glm::mat4(1.f), glm::two_pi<float>() / 4000.f, {0.1, -1.f, 0.f});
         int lightIndex = 0;
         for (auto &kv : frameInfo.gameObjects)
         {
@@ -59,12 +60,7 @@ namespace cfx
 
     void CFXPointLightSystem::render(FrameInfo &frameInfo)
     {
-        // std::cout << "RENDER POINT LIGHT ON " << cfxDevice.getDeviceName(frameInfo.deviceIndex) << std::endl;
-        // if (frameInfo.deviceIndex > 0)
-        // {
-
-        cfxPipeLines[frameInfo.deviceIndex]->bind(frameInfo.commandBuffer);
-        vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout[frameInfo.deviceIndex], 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
+        std::map<float, CFXGameObject::id_t> sorted;
         for (auto &kv : frameInfo.gameObjects)
         {
             auto &obj = kv.second;
@@ -72,15 +68,27 @@ namespace cfx
             {
                 continue;
             }
-            else
-            {
-                PointLightPushConstants push{};
-                push.position = glm::vec4(obj.transformComponent.translation, 1.f);
-                push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
-                push.radius = obj.transformComponent.scale.x;
-                vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout[frameInfo.deviceIndex], VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PointLightPushConstants), &push);
-                vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
-            }
+            // calculate distance
+            auto offset = frameInfo.camera.getPosition() - obj.transformComponent.translation;
+            float distSquared = glm::dot(offset, offset);
+            sorted[distSquared] = obj.getId();
+        }
+
+        // std::cout << "RENDER POINT LIGHT ON " << cfxDevice.getDeviceName(frameInfo.deviceIndex) << std::endl;
+        // if (frameInfo.deviceIndex > 0)
+        // {
+
+        cfxPipeLines[frameInfo.deviceIndex]->bind(frameInfo.commandBuffer);
+        vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout[frameInfo.deviceIndex], 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
+        for (auto it = sorted.rbegin(); it != sorted.rend(); ++it)
+        {
+            auto &obj = frameInfo.gameObjects.at(it->second);
+            PointLightPushConstants push{};
+            push.position = glm::vec4(obj.transformComponent.translation, 1.f);
+            push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+            push.radius = obj.transformComponent.scale.x;
+            vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout[frameInfo.deviceIndex], VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PointLightPushConstants), &push);
+            vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
         }
         // }
     }
@@ -110,6 +118,7 @@ namespace cfx
         // std::cout << "CREATE PIPELINE " << std::endl;
         PipelineConfigInfo pipelineConfig{};
         CFXPipeLine::defaultPipelineConfigInfo(pipelineConfig);
+        CFXPipeLine::enableAlphaBlending(pipelineConfig);
         pipelineConfig.attributeDescriptions.clear();
         pipelineConfig.bindingDescriptions.clear();
 
