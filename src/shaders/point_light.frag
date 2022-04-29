@@ -30,6 +30,6 @@ void main(){
         discard;
     }
     float cosineDist = cos(dis * M_PI);
-    float colorEquation = 1- (cos(dis * M_PI) * sin(dis * M_PI));
-   outColor = vec4(push.color.xyz * (0.4 * (colorEquation + 0.4) ) ,0.5 *( cosineDist + 1.0));
+    float colorEquation = 2.5 *( 1- (cos(dis * M_PI) * sin(dis * M_PI)));
+   outColor = vec4(push.color.xyz * colorEquation , 0.5 *( cosineDist + 1.0));
 }
