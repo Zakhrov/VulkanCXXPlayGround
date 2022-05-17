@@ -13,10 +13,12 @@
 #include <iterator>
 #include <random>
 
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 namespace cfx
 {
@@ -210,20 +212,23 @@ namespace cfx
   // };
 
   std::default_random_engine rng{};
-  std::uniform_real_distribution<float> dist{0.f,1.f};
-  std::uniform_real_distribution<float> intesnsityDist{0.1f,2.f};
-  std::uniform_real_distribution<float> sizeDist{0.01f,0.1f};
+  std::uniform_real_distribution<float> dist{0.1f,1.f};
+  std::uniform_real_distribution<float> intesnsityDist{0.1f,2.5f};
+  std::uniform_real_distribution<float> sizeDist{0.5f,1.0f};
 
   std::vector<glm::vec3> lightColors;
-  lightColors.resize(3);
+  lightColors.resize(5);
+  
+  
 
 
     for(int i=0; i < lightColors.size(); i++){
       lightColors[i] = {dist(rng),dist(rng),dist(rng)};
-      auto pointLight = CFXGameObject::makePointLight(intesnsityDist(rng),0.5f);
-      auto rotateLight = glm::rotate(glm::mat4(.7f),(i * glm::two_pi<float>()) / lightColors.size(), {0.1f,-1.f,0.f});
+      auto pointLight = CFXGameObject::makePointLight(intesnsityDist(rng),sizeDist(rng));
+      auto rotateLight = glm::rotate(glm::mat4(0.9f),(i * glm::two_pi<float>()) / lightColors.size(),{0.f,1.f,0.f});
+      // std::cout << glm::to_string(rotateLight) << std::endl;
       pointLight.color = lightColors[i];
-      pointLight.transformComponent.translation = glm::vec3(rotateLight * glm::vec4(-1.f,-1.f,-1.f,1.f));
+      pointLight.transformComponent.translation = glm::vec3(rotateLight * glm::vec4(-1.f,-1.f,-1.f,-1.f));
       cfxGameObjects.emplace(pointLight.getId(),std::move(pointLight));
     }
   }
