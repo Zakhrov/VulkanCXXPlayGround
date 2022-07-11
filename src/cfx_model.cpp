@@ -1,5 +1,5 @@
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
+#include "external/tinyobjloader/tiny_obj_loader.h"
 
 #include "cfx_model.hpp"
 #include "cfx_utils.hpp"

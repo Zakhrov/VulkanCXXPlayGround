@@ -3,6 +3,7 @@
 #include "systems/cfx_point_light_system.hpp"
 #include "cfx_camera.hpp"
 #include "cfx_buffer.hpp"
+#include "cfx_texture.hpp"
 #include "keyboard_movement_controller.hpp"
 #include <stdexcept>
 #include <array>
@@ -32,6 +33,7 @@ namespace cfx
       cfxDescriptorPools[deviceIndex] = CFXDescriptorPool::Builder(cfxDevice)
                                             .setMaxSets(CFXSwapChain::MAX_FRAMES_IN_FLIGHT)
                                             .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, CFXSwapChain::MAX_FRAMES_IN_FLIGHT)
+                                            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,CFXSwapChain::MAX_FRAMES_IN_FLIGHT)
                                             .build(deviceIndex);
     }
     loadGameObjects();
@@ -45,6 +47,7 @@ namespace cfx
     std::vector<std::vector<std::unique_ptr<CFXBuffer>>> uboBuffers(cfxDevice.getDevicesinDeviceGroup());
     std::vector<std::vector<VkDescriptorSet>> cfxGlobalDescriptorSets(cfxDevice.getDevicesinDeviceGroup());
     std::vector<std::unique_ptr<CFXDescriptorSetLayout>> cfxSetLayouts(cfxDevice.getDevicesinDeviceGroup());
+    std::vector<Texture*> textures(cfxDevice.getDevicesinDeviceGroup());
     std::string framerateString = "Vulkan Window";
 
     for (int deviceIndex = 0; deviceIndex < uboBuffers.size(); deviceIndex++)
@@ -59,14 +62,29 @@ namespace cfx
         uboBuffers[deviceIndex][i]->map();
         // std::cout<< "MAPPED UBO FOR FRAME " << i << " ON DEVICE "  << deviceIndex << std::endl;
       }
-      cfxSetLayouts[deviceIndex] = CFXDescriptorSetLayout::Builder(cfxDevice).addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS).build(deviceIndex);
+      cfxSetLayouts[deviceIndex] = CFXDescriptorSetLayout::Builder(cfxDevice)
+      .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+      .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,VK_SHADER_STAGE_FRAGMENT_BIT)
+      .build(deviceIndex);
+      std::cout<< "CREATING TEXTURE  ON DEVICE "  << deviceIndex << std::endl;
+      textures[deviceIndex] = new Texture(deviceIndex,cfxDevice,"textures/texture_1.jpg");
+
+      
 
       for (int i = 0; i < cfxGlobalDescriptorSets[deviceIndex].size(); i++)
       {
 
+      
+      VkDescriptorImageInfo imageInfo{};
+      imageInfo.imageLayout = textures[deviceIndex]->getImageLayout();
+      imageInfo.imageView = textures[deviceIndex]->getImageView();
+      imageInfo.sampler = textures[deviceIndex]->getSampler();
+
         
         auto bufferInfo = uboBuffers[deviceIndex][i]->descriptorInfo();
-        CFXDescriptorWriter(*cfxSetLayouts[deviceIndex], *cfxDescriptorPools[deviceIndex]).writeBuffer(0, &bufferInfo).build(cfxGlobalDescriptorSets[deviceIndex][i], deviceIndex);
+        CFXDescriptorWriter(*cfxSetLayouts[deviceIndex], *cfxDescriptorPools[deviceIndex]).writeBuffer(0, &bufferInfo)
+        .writeImage(1,&imageInfo)
+        .build(cfxGlobalDescriptorSets[deviceIndex][i], deviceIndex);
         
       }
       

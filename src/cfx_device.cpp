@@ -510,20 +510,22 @@ namespace cfx
     throw std::runtime_error("failed to find supported format!");
   }
 
-  uint32_t CFXDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, int deviceIndex)
+  uint32_t CFXDevice::findMemoryType(VkMemoryRequirements memRequirements, VkMemoryPropertyFlags properties, int deviceIndex)
   {
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevices[deviceIndex], &memProperties);
-
+    // std::cout << "MEMORY TYPES FOR " << deviceNames[deviceIndex] << "TYPE COUNT " << memProperties.memoryTypeCount  << std::endl;
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
     {
-      if ((typeFilter & (1 << i)) &&
-          (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-      {
-        VkPeerMemoryFeatureFlags memoryFlags{};
-        vkGetDeviceGroupPeerMemoryFeatures(devices_[deviceIndex], i, deviceIndex != 0 ? deviceIndices[deviceIndex - 1] : deviceIndices[deviceIndex], deviceIndex == 0 ? deviceIndices[deviceIndex + 1] : deviceIndices[deviceIndex], &memoryFlags);
-        memProperties.memoryHeaps[i].flags = memoryFlags;
 
+      // std::cout << "REQESTED MEMORY " << memRequirements.size << " DEVICE ALLOCATION INDEX " << i << " SIZE "  << memProperties.memoryHeaps[i].size << std::endl;
+      if ((memRequirements.memoryTypeBits & (1 << i)) &&
+          (memProperties.memoryTypes[i].propertyFlags & properties) == properties && memProperties.memoryHeaps[i].size >= memRequirements.size) 
+      {
+        // VkPeerMemoryFeatureFlags memoryFlags{};
+        // vkGetDeviceGroupPeerMemoryFeatures(devices_[deviceIndex], i, deviceIndex != 0 ? deviceIndices[deviceIndex - 1] : deviceIndices[deviceIndex], deviceIndex == 0 ? deviceIndices[deviceIndex + 1] : deviceIndices[deviceIndex], &memoryFlags);
+        // memProperties.memoryHeaps[i].flags = memoryFlags;
+        // std::cout << "MEMORY TYPE IS " << i << std::endl;
         return i;
       }
     }
@@ -557,7 +559,7 @@ namespace cfx
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties, deviceIndex);
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements, properties, deviceIndex);
 
     if (vkAllocateMemory(devices_[deviceIndex], &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
     {
@@ -673,14 +675,11 @@ namespace cfx
 
     VkMemoryRequirements memRequirements;
     vkGetImageMemoryRequirements(devices_[deviceIndex], image, &memRequirements);
-    VkMemoryAllocateFlagsInfo allocFlagsInfo{};
-    allocFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
-    allocFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_MASK_BIT;
-
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties, deviceIndex);
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements, properties, deviceIndex);
+    
 
     if (vkAllocateMemory(devices_[deviceIndex], &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
     {

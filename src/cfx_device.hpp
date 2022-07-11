@@ -64,7 +64,7 @@ class CFXDevice {
   }
 
   SwapChainSupportDetails getSwapChainSupport(int deviceIndex) { return querySwapChainSupport(physicalDevices[deviceIndex]); }
-  uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties,int deviceIndex);
+  uint32_t findMemoryType(VkMemoryRequirements memRequirements, VkMemoryPropertyFlags properties,int deviceIndex);
   QueueFamilyIndices findPhysicalQueueFamilies(int deviceIndex) { return findQueueFamilies(physicalDevices,deviceIndex); }
   VkFormat findSupportedFormat(
       const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
