@@ -20,8 +20,11 @@ namespace cfx{
         deviceIndex};
         stagingBuffer.map();
         stagingBuffer.writeToBuffer(data);
+        
         imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-        VkImageCreateInfo imageInfo{};
+        
+
+        VkImageCreateInfo imageInfo = {};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageInfo.imageType = VK_IMAGE_TYPE_2D;
         imageInfo.format = imageFormat;
@@ -31,8 +34,9 @@ namespace cfx{
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.extent = {static_cast<uint32_t>(width),static_cast<uint32_t>(height),1};
+        imageInfo.extent = {static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1};
         imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
 
         std::cout << "CREATING TEXTURE IMAGE INFO ON DEVICE " << cfxDevice.getDeviceName(deviceIndex) <<  std::endl;
         cfxDevice.createImageWithInfo(imageInfo,VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,image,imageMemory,deviceIndex);
@@ -55,8 +59,8 @@ namespace cfx{
         imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_NEAREST;
-        samplerInfo.minFilter = VK_FILTER_NEAREST;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
         samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
@@ -64,7 +68,7 @@ namespace cfx{
         samplerInfo.mipLodBias = 0.0f;
         samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
         samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = 0.0f;
+        samplerInfo.maxLod = static_cast<float>(mipLevels);
         samplerInfo.maxAnisotropy = 4.0f;
         samplerInfo.anisotropyEnable = VK_TRUE;
         samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
@@ -101,6 +105,8 @@ namespace cfx{
             throw std::runtime_error("Texture Image format does not support linear blitting");
         }
         VkCommandBuffer commandBuffer = cfxDevice.beginSingleTimeCommands(deviceIndex);
+
+
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -162,8 +168,9 @@ namespace cfx{
         std::cout << "BEGIN vkCmdPipelineBarrier VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT for level " << "OUTSIDE MIPLEVEL LOOP" << std::endl << std::endl;
         vkCmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_TRANSFER_BIT,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0,nullptr,0,nullptr,1,&barrier);
         std::cout << "END vkCmdPipelineBarrier VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT for level " << "OUTSIDE MIPLEVEL LOOP" << std::endl << std::endl;
-
+        std::cout << "BEGIN END SINGLETIME COMMANDS FOR " << cfxDevice.getDeviceName(deviceIndex) << std::endl << std::endl;
         cfxDevice.endSingleTimeCommands(commandBuffer,deviceIndex);
+        std::cout << "END END SINGLETIME COMMANDS FOR " << cfxDevice.getDeviceName(deviceIndex) << std::endl << std::endl;
 
         
     }
@@ -180,7 +187,7 @@ namespace cfx{
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.baseMipLevel = 0;
         barrier.subresourceRange.layerCount = 1;
-        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.levelCount = mipLevels;
 
         VkPipelineStageFlags sourceStage;
         VkPipelineStageFlags destinationStage;
