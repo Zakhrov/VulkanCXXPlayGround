@@ -38,22 +38,22 @@ namespace cfx{
         imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
 
-        std::cout << "CREATING TEXTURE IMAGE INFO ON DEVICE " << cfxDevice.getDeviceName(deviceIndex) <<  std::endl;
+        
         cfxDevice.createImageWithInfo(imageInfo,VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,image,imageMemory,deviceIndex);
 
-        std::cout << "START TRANSITION FROM  VK_IMAGE_LAYOUT_UNDEFINED to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL " << std::endl;
+        
         transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        std::cout << "END TRANSITION FROM  VK_IMAGE_LAYOUT_UNDEFINED to VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL " << std::endl;
+        
 
 
-        std::cout << "START COPY BUFFER TO IMAGE DEVICE INDEX " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
+        
         cfxDevice.copyBufferToImage(stagingBuffer.getBuffer(),image,static_cast<uint32_t>(width),static_cast<uint32_t>(height),1,deviceIndex);
-        std::cout << "END COPY BUFFER TO IMAGE DEVICE INDEX " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
+        
 
         
         
         generateMipMaps();
-        std::cout << "END GENERATE MIPMAPS "<< std::endl;
+        
         // transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         
         imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -73,10 +73,10 @@ namespace cfx{
         samplerInfo.anisotropyEnable = VK_TRUE;
         samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
-        std::cout << "CREATING SAMPLER ON DEVICE " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
+        
 
         vkCreateSampler(cfxDevice.device(deviceIndex),&samplerInfo,nullptr,&sampler);
-        std::cout << "CREATED SAMPLER ON DEVICE " << cfxDevice.getDeviceName(deviceIndex) << std::endl;
+        
 
         VkImageViewCreateInfo imageViewInfo{};
         imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -90,15 +90,15 @@ namespace cfx{
         imageViewInfo.subresourceRange.levelCount = mipLevels;
         imageViewInfo.image = image;
 
-        std::cout << "CREATING TEXTURE IMAGE VIEW" << std::endl;
+        
 
         vkCreateImageView(cfxDevice.device(deviceIndex),&imageViewInfo,nullptr,&imageView);
-        std::cout << "CREATED TEXTURE IMAGE VIEW" << std::endl;
+        
         stbi_image_free(data);
 
     }
     void Texture::generateMipMaps(){
-        std::cout << "GENERATING MIPMAPS " << std::endl;
+        
         VkFormatProperties formatProperties;
         vkGetPhysicalDeviceFormatProperties(cfxDevice.getPhysicalDevices()[deviceIndex],imageFormat,&formatProperties);
         if(!formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT){
@@ -121,15 +121,15 @@ namespace cfx{
         int32_t mipHeight = height;
 
         for(uint32_t i = 1; i < mipLevels; i++){
-            std::cout << std::endl;
+            
             barrier.subresourceRange.baseMipLevel = i - 1;
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-            std::cout << "BEGIN vkCmdPipelineBarrier VK_PIPELINE_STAGE_TRANSFER_BIT for level " << i << std::endl << std::endl;
+            
             vkCmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_TRANSFER_BIT,VK_PIPELINE_STAGE_TRANSFER_BIT,0,0,nullptr,0,nullptr,1,&barrier);
-            std::cout << "END vkCmdPipelineBarrier VK_PIPELINE_STAGE_TRANSFER_BIT for level " << i << std::endl << std::endl;
+            
             VkImageBlit blit{};
             blit.srcOffsets[0] = {0,0,0};
             blit.srcOffsets[1] = {mipWidth, mipHeight, 1};
@@ -144,17 +144,17 @@ namespace cfx{
             blit.dstSubresource.baseArrayLayer = 0;
             blit.dstSubresource.layerCount = 1;
 
-            std::cout << "BEGIN vkCmdBlitImage VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL to  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL for level " << i << std::endl << std::endl;
+            
             vkCmdBlitImage(commandBuffer,image,VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,image,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,1,&blit,VK_FILTER_LINEAR);
-            std::cout << "END vkCmdBlitImage VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL to  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL for level " << i << std::endl << std::endl;
+            
 
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-            std::cout << "BEGIN vkCmdPipelineBarrier VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT for level " << i << std::endl << std::endl;
+            
             vkCmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_TRANSFER_BIT,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0,nullptr,0,nullptr,1,&barrier);
-            std::cout << "END vkCmdPipelineBarrier VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT for level " << i << std::endl << std::endl;
+            
             if(mipWidth > 1) mipWidth = mipWidth / 2;
             if(mipHeight > 1) mipHeight = mipHeight / 2;
 
@@ -165,12 +165,12 @@ namespace cfx{
         barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        std::cout << "BEGIN vkCmdPipelineBarrier VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT for level " << "OUTSIDE MIPLEVEL LOOP" << std::endl << std::endl;
+        
         vkCmdPipelineBarrier(commandBuffer,VK_PIPELINE_STAGE_TRANSFER_BIT,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,0,0,nullptr,0,nullptr,1,&barrier);
-        std::cout << "END vkCmdPipelineBarrier VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT for level " << "OUTSIDE MIPLEVEL LOOP" << std::endl << std::endl;
-        std::cout << "BEGIN END SINGLETIME COMMANDS FOR " << cfxDevice.getDeviceName(deviceIndex) << std::endl << std::endl;
+        
+        
         cfxDevice.endSingleTimeCommands(commandBuffer,deviceIndex);
-        std::cout << "END END SINGLETIME COMMANDS FOR " << cfxDevice.getDeviceName(deviceIndex) << std::endl << std::endl;
+        
 
         
     }

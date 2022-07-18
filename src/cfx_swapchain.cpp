@@ -139,7 +139,7 @@ namespace cfx
     std::vector<VkSemaphore> waitSemaphores = {imageAvailableSemaphores[deviceIndex][currentFrame]};
     std::vector<uint32_t> waitSemaphoreIndices = {0};
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.waitSemaphoreCount = waitSemaphores.size();
     submitInfo.pWaitSemaphores = waitSemaphores.data();
     submitInfo.pWaitDstStageMask = waitStages;
 
@@ -148,7 +148,7 @@ namespace cfx
 
     std::vector<VkSemaphore> signalSemaphores = {renderFinishedSemaphores[deviceIndex][currentFrame]};
     std::vector<uint32_t> signalSemaphoreIndices = {0};
-    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.signalSemaphoreCount = signalSemaphores.size();
     submitInfo.pSignalSemaphores = signalSemaphores.data();
 
     VkResult result = vkResetFences(device.device(deviceIndex), 1, &inFlightFences[deviceIndex][currentFrame]);
@@ -164,7 +164,7 @@ namespace cfx
       VkPresentInfoKHR presentInfo = {};
       presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
-      presentInfo.waitSemaphoreCount = 1;
+      presentInfo.waitSemaphoreCount = signalSemaphores.size();
       presentInfo.pWaitSemaphores = signalSemaphores.data();
 
       presentInfo.swapchainCount = 1;

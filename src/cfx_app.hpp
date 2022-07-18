@@ -6,6 +6,7 @@
 #include "cfx_model.hpp"
 #include "cfx_game_object.hpp"
 #include "cfx_descriptors.hpp"
+#include "cfx_texture.hpp"
 #include<memory>
 #include<vector>
 #include <glm/glm.hpp>
@@ -37,6 +38,7 @@ namespace cfx{
         Renderer cfxRenderer{window,cfxDevice};
         std::vector<std::unique_ptr<CFXDescriptorPool>> cfxDescriptorPools;
         CFXGameObject::Map cfxGameObjects; 
+        std::vector<Texture*> textures;
         
         
     };
